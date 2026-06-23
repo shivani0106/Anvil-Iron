@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anvil AI — Agent Dashboard</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0F1117;--surface:#1A1D27;--surface2:#242736;--border:#2E3348;
+      --accent:#6C63FF;--accent-dim:rgba(108,99,255,.15);
+      --text:#E8EAF0;--text-dim:#8B90A8;--text-muted:#4A5068;
+      --green:#34D399;--amber:#FBBF24;--red:#F87171;--blue:#60A5FA;
+    }
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* ── Header ── */
+    .header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .logo h1{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+    .logo span{font-size:11px;color:var(--text-muted);display:block}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .conn-row{display:flex;align-items:center;gap:6px}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;transition:background .3s}
+    .status-dot.ok{background:var(--green)}
+    .api-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:12px;width:240px;font-family:monospace;outline:none;transition:border-color .2s}
+    .api-input:focus{border-color:var(--accent)}
+    .api-input::placeholder{color:var(--text-muted)}
+    .btn{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+    .btn:hover{opacity:.85}
+    .btn-accent{background:var(--accent);color:#fff}
+    .btn-ghost{background:none;border:1px solid var(--border);color:var(--text-dim)}
+    .btn-ghost:hover{border-color:var(--red);color:var(--red)}
+
+    /* ── Main 3-col ── */
+    .main{display:grid;grid-template-columns:256px 1fr 272px;flex:1;overflow:hidden;min-height:0}
+
+    /* ── Left: Agent Status ── */
+    .panel{display:flex;flex-direction:column;overflow:hidden}
+    .panel-left{background:var(--surface);border-right:1px solid var(--border)}
+    .panel-right{background:var(--surface);border-left:1px solid var(--border)}
+    .ptitle{padding:12px 16px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);flex-shrink:0}
+
+    .agent-list{padding:10px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+    .agent-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;transition:border-color .25s,box-shadow .25s}
+    .agent-card[data-agent=orchestrator]{--cc:#6C63FF;--ccr:108,99,255}
+    .agent-card[data-agent=business]{--cc:#34D399;--ccr:52,211,153}
+    .agent-card[data-agent=ui]{--cc:#60A5FA;--ccr:96,165,250}
+    .agent-card.active{border-color:var(--cc);box-shadow:0 0 0 1px var(--cc),0 0 18px rgba(var(--ccr),.12)}
+    .agent-head{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+    .adot{width:7px;height:7px;border-radius:50%;background:var(--cc);opacity:.25;transition:opacity .3s;flex-shrink:0}
+    .agent-card.active .adot{opacity:1;animation:pulse 1s infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.6}}
+    .aname{font-size:12px;font-weight:700;color:var(--text);flex:1}
+    .abadge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;color:var(--cc);background:rgba(var(--ccr),.15)}
+    .adesc{font-size:10px;color:var(--text-muted);line-height:1.4}
+    .astatus{font-size:11px;color:var(--text-muted);margin-top:5px;min-height:14px;transition:color .2s;font-style:italic}
+    .agent-card.active .astatus{color:var(--cc);font-style:normal;font-weight:500}
+
+    /* tool log */
+    .tool-log{flex:1;overflow:hidden;display:flex;flex-direction:column;border-top:1px solid var(--border);min-height:0}
+    .tool-entries{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+    .te{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 9px}
+    .te-head{display:flex;justify-content:space-between;align-items:center;gap:6px}
+    .te-name{font-family:monospace;color:var(--amber);font-size:10px;font-weight:700}
+    .te-agent{font-size:9px;font-weight:600}
+    .te-result{color:var(--text-muted);font-size:10px;margin-top:2px;line-height:1.3;max-height:36px;overflow:hidden}
+
+    /* ── Center: Chat ── */
+    .panel-chat{display:flex;flex-direction:column;overflow:hidden}
+    .chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+
+    /* empty state */
+    .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center}
+    .empty-icon{width:58px;height:58px;background:var(--accent-dim);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px}
+    .empty h2{font-size:17px;font-weight:700}
+    .empty p{font-size:13px;color:var(--text-dim);line-height:1.5;max-width:300px}
+    .chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:6px}
+    .chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--text);cursor:pointer;transition:border-color .15s,color .15s}
+    .chip:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* messages */
+    .msg{display:flex;flex-direction:column;gap:3px;max-width:82%}
+    .msg.user{align-self:flex-end;align-items:flex-end}
+    .msg.ai{align-self:flex-start;align-items:flex-start}
+    .msg-role{font-size:10px;color:var(--text-muted);padding:0 5px}
+    .bubble{padding:9px 13px;border-radius:11px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+    .msg.user .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+    .msg.ai .bubble{background:var(--surface);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
+    .msg-meta{display:flex;gap:7px;font-size:10px;color:var(--text-muted);padding:0 5px;font-family:monospace}
+
+    /* typing */
+    .typing{display:flex;gap:3px;align-items:center;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:11px;border-bottom-left-radius:3px;width:fit-content}
+    .tdot{width:5px;height:5px;border-radius:50%;background:var(--text-muted);animation:tdots 1.2s infinite}
+    .tdot:nth-child(2){animation-delay:.2s}
+    .tdot:nth-child(3){animation-delay:.4s}
+    @keyframes tdots{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+
+    /* input */
+    .input-bar{padding:12px 14px;border-top:1px solid var(--border);background:var(--surface);display:flex;gap:9px;align-items:flex-end;flex-shrink:0}
+    .chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 13px;color:var(--text);font-size:13px;resize:none;font-family:inherit;line-height:1.4;min-height:40px;max-height:110px;overflow-y:auto;outline:none;transition:border-color .2s}
+    .chat-input:focus{border-color:var(--accent)}
+    .chat-input::placeholder{color:var(--text-muted)}
+    .send-btn{width:40px;height:40px;background:var(--accent);border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s;flex-shrink:0}
+    .send-btn:hover{opacity:.85}
+    .send-btn:disabled{opacity:.35;cursor:not-allowed}
+    .send-btn svg{width:17px;height:17px;fill:#fff}
+
+    /* ── Right: Stats ── */
+    .stats-body{padding:12px;border-bottom:1px solid var(--border)}
+    .cost-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+    .cost-big{font-size:30px;font-weight:700;font-family:monospace;letter-spacing:-.02em}
+    .cost-big .dim{font-size:16px;color:var(--text-dim)}
+    .cost-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+    .cost-row{display:flex;gap:8px;margin-top:10px}
+    .cost-part{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px;text-align:center}
+    .cost-part-v{font-size:11px;font-weight:600;font-family:monospace}
+    .cost-part-l{font-size:9px;color:var(--text-muted);margin-top:2px}
+
+    .stat-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+    .sk{font-size:12px;color:var(--text-dim)}
+    .sv{font-size:12px;font-weight:600;font-family:monospace}
+    .sv.hi{color:var(--accent)}
+    .sv.sm{font-size:10px}
+
+    /* turn history */
+    .turn-history{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+    .turn-list{flex:1;overflow-y:auto;padding:0 12px 10px}
+    .turn-item{display:grid;grid-template-columns:1fr auto;padding:7px 0;border-bottom:1px solid var(--border);gap:8px}
+    .turn-item:last-child{border-bottom:none}
+    .turn-q{font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .turn-c{font-size:10px;color:var(--text-muted);font-family:monospace;white-space:nowrap}
+
+    /* misc */
+    ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e2030;border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:8px;font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1}
+    .toast.err{background:var(--red);border-color:var(--red);color:#fff}
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">⚙</div>
+    <div>
+      <h1>Anvil AI Dashboard</h1>
+      <span>Shree Iron Works · Multi-Agent Monitor</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="conn-row">
+      <div class="status-dot" id="connDot"></div>
+      <input class="api-input" id="apiKeyInput" type="password" placeholder="sk-ant-api03-… (Anthropic API Key)">
+      <button class="btn btn-accent" onclick="saveKey()">Connect</button>
+    </div>
+    <button class="btn btn-ghost" onclick="clearSession()">Clear</button>
+  </div>
+</div>
+
+<!-- ── Main ───────────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- LEFT: Agent status + tool log -->
+  <div class="panel panel-left">
+    <div class="ptitle">Agent System</div>
+    <div class="agent-list">
+      <div class="agent-card" id="card-orchestrator" data-agent="orchestrator">
+        <div class="agent-head">
+          <div class="adot"></div>
+          <div class="aname">Orchestrator</div>
+          <div class="abadge">COORD</div>
+        </div>
+        <div class="adesc">Routes tasks to specialized sub-agents based on intent</div>
+        <div class="astatus" id="st-orchestrator">Idle</div>
+      </div>
+      <div class="agent-card" id="card-business" data-agent="business">
+        <div class="agent-head">
+          <div class="adot"></div>
+          <div class="aname">Business Logic</div>
+          <div class="abadge">DATA</div>
+        </div>
+        <div class="adesc">Queries orders, inventory, invoices and summaries</div>
+        <div class="astatus" id="st-business">Idle</div>
+      </div>
+      <div class="agent-card" id="card-ui" data-agent="ui">
+        <div class="agent-head">
+          <div class="adot"></div>
+          <div class="aname">UI Agent</div>
+          <div class="abadge">NAV</div>
+        </div>
+        <div class="adesc">Handles app navigation and toast notifications</div>
+        <div class="astatus" id="st-ui">Idle</div>
+      </div>
+    </div>
+
+    <!-- Tool call log -->
+    <div class="tool-log">
+      <div class="ptitle">Tool Calls</div>
+      <div class="tool-entries" id="toolLog">
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;padding:16px 0">No tool calls yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Chat -->
+  <div class="panel panel-chat">
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="empty" id="emptyState">
+        <div class="empty-icon">⚡</div>
+        <h2>Anvil AI</h2>
+        <p>Multi-agent system for Shree Iron Works. Ask about orders, inventory, invoices, or give navigation commands.</p>
+        <div class="chips">
+          <span class="chip" onclick="suggest('Show all active orders')">Active orders</span>
+          <span class="chip" onclick="suggest('Which inventory items are low on stock?')">Low stock alert</span>
+          <span class="chip" onclick="suggest('What is the total outstanding invoice amount?')">Invoice totals</span>
+          <span class="chip" onclick="suggest('Give me a business summary')">Business summary</span>
+          <span class="chip" onclick="suggest('Advance order #1042 to the next stage')">Advance #1042</span>
+          <span class="chip" onclick="suggest('Show details for order 1044')">Order #1044 detail</span>
+          <span class="chip" onclick="suggest('Navigate to the inventory screen')">Go to inventory</span>
+          <span class="chip" onclick="suggest('Show all overdue invoices')">Overdue invoices</span>
+        </div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea class="chat-input" id="chatInput"
+        placeholder="Ask about orders, stock, invoices… or give a navigation command"
+        rows="1" onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send (Enter)">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Stats -->
+  <div class="panel panel-right">
+    <div class="ptitle">Session Cost</div>
+    <div class="stats-body">
+      <div class="cost-card">
+        <div class="cost-big">$<span id="cDollar">0</span><span class="dim">.<span id="cCents">000000</span></span></div>
+        <div class="cost-sub">Total session cost (USD)</div>
+        <div class="cost-row">
+          <div class="cost-part">
+            <div class="cost-part-v" id="inCost">$0.000000</div>
+            <div class="cost-part-l">Input</div>
+          </div>
+          <div class="cost-part">
+            <div class="cost-part-v" id="outCost">$0.000000</div>
+            <div class="cost-part-l">Output</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-body">
+      <div class="stat-label">Token Usage</div>
+      <div class="stat-row"><span class="sk">Input tokens</span><span class="sv hi" id="sTokIn">0</span></div>
+      <div class="stat-row"><span class="sk">Output tokens</span><span class="sv hi" id="sTokOut">0</span></div>
+      <div class="stat-row"><span class="sk">Total tokens</span><span class="sv" id="sTokTotal">0</span></div>
+      <div class="stat-row"><span class="sk">API calls made</span><span class="sv" id="sApiCalls">0</span></div>
+    </div>
+
+    <div class="stats-body">
+      <div class="stat-label">Model</div>
+      <div class="stat-row"><span class="sk">Model</span><span class="sv sm">claude-sonnet-4-6</span></div>
+      <div class="stat-row"><span class="sk">Input rate</span><span class="sv">$3.00 / MTok</span></div>
+      <div class="stat-row"><span class="sk">Output rate</span><span class="sv">$15.00 / MTok</span></div>
+    </div>
+
+    <div class="turn-history">
+      <div class="ptitle">Turn History</div>
+      <div class="turn-list" id="turnList">
+        <div style="font-size:11px;color:var(--text-muted);text-align:center;padding:14px 0">No turns yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const MODEL = 'claude-sonnet-4-6';
+const IN_RATE  = 3.0  / 1_000_000;  // $3 per million input tokens
+const OUT_RATE = 15.0 / 1_000_000;  // $15 per million output tokens
+
+// ── State ────────────────────────────────────────────────────────────────────
+let apiKey = '';
+let loading = false;
+let history = [];  // orchestrator conversation [{role,content}]
+let stats = { inTok: 0, outTok: 0, calls: 0 };
+
+// ── Sample data (mirrors lib/data/sample_data.dart) ─────────────────────────
+const STAGES = ['queued','cutting','welding','qc','ready'];
+const SL = { queued:'Queued', cutting:'Cutting', welding:'Welding', qc:'QC', ready:'Ready' };
+
+const DATA = {
+  orders: [
+    { id:1042, customer:'Patel Engineering',   item:'MS Angle Bracket', spec:'40×40×5',       qty:120, material:'MS Angle',      due:'28 Jun', ordered:'12 Jun', stage:'welding', delivered:false },
+    { id:1041, customer:'Krishna Motors',      item:'GI Shaft',         spec:'Ø25×600mm',     qty:30,  material:'GI Round Bar',  due:'25 Jun', ordered:'10 Jun', stage:'qc',      delivered:false },
+    { id:1040, customer:'Deccan Fabricators',  item:'MS Frame',         spec:'1200×800mm',    qty:5,   material:'MS Channel',    due:'22 Jun', ordered:'8 Jun',  stage:'ready',   delivered:false },
+    { id:1039, customer:'Surya Auto',          item:'Drill Jig Plate',  spec:'300×200×10mm',  qty:10,  material:'EN8 Flat',      due:'20 Jun', ordered:'5 Jun',  stage:'ready',   delivered:true  },
+    { id:1038, customer:'Patel Engineering',   item:'Bolt Plate Set',   spec:'M12 × 50mm',    qty:200, material:'MS Flat',       due:'18 Jun', ordered:'3 Jun',  stage:'ready',   delivered:true  },
+    { id:1043, customer:'Apex Industries',     item:'GI Washer',        spec:'M16 DIN 125',   qty:500, material:'GI Sheet',      due:'30 Jun', ordered:'14 Jun', stage:'queued',  delivered:false },
+    { id:1044, customer:'Krishna Motors',      item:'Gear Blank',       spec:'Ø80×30mm',      qty:15,  material:'EN8 Round',     due:'5 Jul',  ordered:'15 Jun', stage:'cutting', delivered:false },
+  ],
+  inventory: [
+    { id:1, name:'MS Angle',          category:'Structural', qty:480, unit:'kg',     reorder:300 },
+    { id:2, name:'GI Sheet',          category:'Sheet Metal',qty:28,  unit:'sheets', reorder:50  },
+    { id:3, name:'MS Round Bar',      category:'Bar Stock',  qty:210, unit:'kg',     reorder:200 },
+    { id:4, name:'Welding Electrode', category:'Consumable', qty:12,  unit:'kg',     reorder:25  },
+    { id:5, name:'EN8 Round Bar',     category:'Bar Stock',  qty:95,  unit:'kg',     reorder:80  },
+    { id:6, name:'Cutting Disc',      category:'Consumable', qty:8,   unit:'pcs',    reorder:20  },
+    { id:7, name:'Red Oxide Primer',  category:'Paint',      qty:18,  unit:'L',      reorder:10  },
+    { id:8, name:'MS Channel',        category:'Structural', qty:150, unit:'kg',     reorder:200 },
+  ],
+  invoices: [
+    { id:'INV-2406', customer:'Patel Engineering',  amount:48500, status:'outstanding', date:'14 Jun' },
+    { id:'INV-2405', customer:'Krishna Motors',     amount:32200, status:'paid',        date:'10 Jun' },
+    { id:'INV-2404', customer:'Deccan Fabricators', amount:71000, status:'overdue',     date:'1 Jun'  },
+    { id:'INV-2403', customer:'Surya Auto',         amount:19800, status:'paid',        date:'28 May' },
+    { id:'INV-2402', customer:'Apex Industries',    amount:25500, status:'outstanding', date:'20 May' },
+  ],
+  quotes: [
+    { id:'QT-0089', customer:'Apex Industries',   amount:55000, status:'pending', date:'15 Jun' },
+    { id:'QT-0088', customer:'Krishna Motors',    amount:28000, status:'won',     date:'8 Jun'  },
+    { id:'QT-0087', customer:'Sunrise Metals',    amount:18500, status:'lost',    date:'2 Jun'  },
+    { id:'QT-0086', customer:'Patel Engineering', amount:92000, status:'pending', date:'28 May' },
+  ],
+};
+
+// ── Tool definitions ─────────────────────────────────────────────────────────
+const ORCH_TOOLS = [
+  { name:'ask_business_agent', description:'Delegate to the business logic agent for data queries or actions (orders, inventory, invoices).',
+    input_schema:{ type:'object', properties:{ task:{type:'string',description:'The task to send to the business agent'} }, required:['task'] } },
+  { name:'ask_ui_agent', description:'Delegate to the UI agent for navigation or notifications.',
+    input_schema:{ type:'object', properties:{ task:{type:'string',description:'The navigation or UI action to perform'} }, required:['task'] } },
+];
+
+const BIZ_TOOLS = [
+  { name:'get_orders', description:'Get orders, optionally filtered by status or search.',
+    input_schema:{ type:'object', properties:{ filter:{type:'string',enum:['all','active','done']}, search:{type:'string'} } } },
+  { name:'get_order_detail', description:'Get full details for a specific order.',
+    input_schema:{ type:'object', properties:{ order_id:{type:'integer'} }, required:['order_id'] } },
+  { name:'advance_order_stage', description:'Advance an order to its next production stage.',
+    input_schema:{ type:'object', properties:{ order_id:{type:'integer'} }, required:['order_id'] } },
+  { name:'get_inventory', description:'Get inventory items, optionally filtered to low stock.',
+    input_schema:{ type:'object', properties:{ search:{type:'string'}, low_stock_only:{type:'boolean'} } } },
+  { name:'get_invoices', description:'Get invoices or quotes with totals.',
+    input_schema:{ type:'object', properties:{ type:{type:'string',enum:['invoices','quotes']} } } },
+  { name:'get_summary', description:'Get a high-level business summary.',
+    input_schema:{ type:'object', properties:{} } },
+];
+
+const UI_TOOLS = [
+  { name:'navigate_to', description:'Navigate to a screen.',
+    input_schema:{ type:'object', properties:{ screen:{type:'string',enum:['hub','orders','inventory','invoices','machines','suppliers','drawings','team','reports']} }, required:['screen'] } },
+  { name:'go_back', description:'Go back to the previous screen.',
+    input_schema:{ type:'object', properties:{} } },
+  { name:'show_toast', description:'Show a notification.',
+    input_schema:{ type:'object', properties:{ message:{type:'string'} }, required:['message'] } },
+];
+
+// ── System prompts ───────────────────────────────────────────────────────────
+const ORCH_SYS = `You are Anvil AI, the intelligent assistant for Shree Iron Works. You help staff manage orders, inventory, invoices, and navigate the app.
+
+You have two sub-agents:
+1. business — for data queries and actions (orders, inventory, invoices, summaries)
+2. ui — for navigation (go to screens, show notifications, go back)
+
+Always delegate via tools. Never answer data questions from memory.
+Respond in a friendly, concise tone suitable for manufacturing floor staff.`;
+
+const BIZ_SYS = `You are a business data assistant for Shree Iron Works. You have access to live data about orders, inventory, and invoices.
+Use your tools to answer questions accurately. Format responses clearly. When reporting lists use bullet points.`;
+
+const UI_SYS = `You are a navigation assistant for the Shree Iron Works app.
+Available screens: hub, orders, inventory, invoices, machines, suppliers, drawings, team, reports.
+Use tools to execute navigation. Always confirm what you did.`;
+
+// ── Anthropic API call ───────────────────────────────────────────────────────
+async function callAPI({ system, messages, tools }) {
+  if (!apiKey) throw new Error('No API key. Enter your Anthropic API key and click Connect.');
+  const body = { model: MODEL, max_tokens: 1024, system, messages };
+  if (tools && tools.length) body.tools = tools;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e?.error?.message || `API ${res.status}`);
+  }
+  const data = await res.json();
+  const u = data.usage || {};
+  stats.inTok  += u.input_tokens  || 0;
+  stats.outTok += u.output_tokens || 0;
+  stats.calls  += 1;
+  refreshStats();
+  return data;
+}
+
+// ── Generic agent runner (agentic loop) ─────────────────────────────────────
+async function runAgent({ id, system, messages, tools, onTool }) {
+  setActive(id, 'Thinking…');
+  const msgs = [...messages];
+  while (true) {
+    const data = await callAPI({ system, messages: msgs, tools });
+    if (data.stop_reason !== 'tool_use') {
+      setIdle(id);
+      return data.content?.find(b => b.type === 'text')?.text || '';
+    }
+    // Append assistant tool-use turn
+    msgs.push({ role: 'assistant', content: data.content.map(b => {
+      if (b.type === 'text')     return { type:'text', text:b.text };
+      if (b.type === 'tool_use') return { type:'tool_use', id:b.id, name:b.name, input:b.input };
+      return b;
+    })});
+    // Execute each tool
+    const results = [];
+    for (const b of data.content.filter(b => b.type === 'tool_use')) {
+      setActive(id, `Calling ${b.name}…`);
+      const result = await onTool(b.name, b.input);
+      logTool(id, b.name, result);
+      results.push({ type:'tool_result', tool_use_id:b.id, content: String(result) });
+    }
+    msgs.push({ role:'user', content: results });
+  }
+}
+
+// ── Business tool handlers ───────────────────────────────────────────────────
+function bizTool(name, args) {
+  switch (name) {
+    case 'get_orders': {
+      let rows = [...DATA.orders];
+      const f = args.filter || 'all', q = (args.search||'').toLowerCase();
+      if (f==='active') rows = rows.filter(o=>!o.delivered);
+      else if (f==='done') rows = rows.filter(o=>o.delivered);
+      if (q) rows = rows.filter(o=>`${o.id} ${o.customer} ${o.item}`.toLowerCase().includes(q));
+      if (!rows.length) return 'No orders found.';
+      return JSON.stringify(rows.map(o=>({ id:o.id, customer:o.customer, item:o.item, qty:o.qty, stage:SL[o.stage]||o.stage, due:o.due, delivered:o.delivered })));
+    }
+    case 'get_order_detail': {
+      const o = DATA.orders.find(x=>x.id===args.order_id);
+      if (!o) return `Order #${args.order_id} not found.`;
+      return JSON.stringify({ ...o, stage: SL[o.stage]||o.stage, stage_progress:`${STAGES.indexOf(o.stage)+1}/${STAGES.length}` });
+    }
+    case 'advance_order_stage': {
+      const o = DATA.orders.find(x=>x.id===args.order_id);
+      if (!o) return `Order #${args.order_id} not found.`;
+      if (o.delivered) return `Order #${args.order_id} is already delivered.`;
+      const prev = SL[o.stage]||o.stage;
+      const idx = STAGES.indexOf(o.stage);
+      if (idx === STAGES.length-1) { o.delivered=true; return `Order #${args.order_id} marked as Delivered (was "${prev}").`; }
+      o.stage = STAGES[idx+1];
+      return `Order #${args.order_id} advanced: "${prev}" → "${SL[o.stage]}".`;
+    }
+    case 'get_inventory': {
+      let rows = [...DATA.inventory];
+      const q = (args.search||'').toLowerCase(), low = args.low_stock_only||false;
+      if (low) rows = rows.filter(i=>i.qty<i.reorder);
+      if (q) rows = rows.filter(i=>`${i.name} ${i.category}`.toLowerCase().includes(q));
+      if (!rows.length) return low?'No low-stock items.':'No items found.';
+      return JSON.stringify(rows.map(i=>({ ...i, is_low:i.qty<i.reorder, reorder_level:i.reorder })));
+    }
+    case 'get_invoices': {
+      if ((args.type||'invoices')==='quotes') return JSON.stringify(DATA.quotes);
+      const out = DATA.invoices.filter(i=>i.status==='outstanding').reduce((s,i)=>s+i.amount,0);
+      const ovr = DATA.invoices.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.amount,0);
+      const rev = DATA.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.amount,0);
+      return JSON.stringify({ invoices:DATA.invoices, total_outstanding:out, total_overdue:ovr, total_revenue:rev });
+    }
+    case 'get_summary': {
+      const active = DATA.orders.filter(o=>!o.delivered).length;
+      const low    = DATA.inventory.filter(i=>i.qty<i.reorder).length;
+      const out    = DATA.invoices.filter(i=>i.status==='outstanding').reduce((s,i)=>s+i.amount,0);
+      const ovr    = DATA.invoices.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.amount,0);
+      return JSON.stringify({ active_orders:active, total_orders:DATA.orders.length, low_stock_items:low, total_inventory:DATA.inventory.length, outstanding_amount:out, overdue_amount:ovr });
+    }
+    default: return `Unknown tool: ${name}`;
+  }
+}
+
+// ── UI tool handlers ─────────────────────────────────────────────────────────
+function uiTool(name, args) {
+  switch (name) {
+    case 'navigate_to': return `Navigated to the ${args.screen} screen. (In the Flutter app this would change the active screen.)`;
+    case 'go_back':     return 'Went back to the previous screen.';
+    case 'show_toast':  return `Showed notification: "${args.message}"`;
+    default: return `Unknown tool: ${name}`;
+  }
+}
+
+// ── Orchestrator tool handler ────────────────────────────────────────────────
+async function orchTool(name, args) {
+  if (name === 'ask_business_agent') {
+    return runAgent({ id:'business', system:BIZ_SYS, messages:[{role:'user',content:args.task}], tools:BIZ_TOOLS, onTool:(n,a)=>Promise.resolve(bizTool(n,a)) });
+  }
+  if (name === 'ask_ui_agent') {
+    return runAgent({ id:'ui', system:UI_SYS, messages:[{role:'user',content:args.task}], tools:UI_TOOLS, onTool:(n,a)=>Promise.resolve(uiTool(n,a)) });
+  }
+  return `Unknown tool: ${name}`;
+}
+
+// ── Main send ────────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const inp = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if (!text || loading) return;
+  if (!apiKey) { toast('Enter your Anthropic API key and click Connect', true); return; }
+
+  inp.value = ''; autoResize(inp);
+  loading = true;
+  document.getElementById('sendBtn').disabled = true;
+  hideEmpty();
+
+  const snapIn = stats.inTok, snapOut = stats.outTok;
+  appendMsg('user', text);
+  const tid = addTyping();
+
+  try {
+    history.push({ role:'user', content:text });
+    const reply = await runAgent({
+      id:'orchestrator', system:ORCH_SYS, messages:history, tools:ORCH_TOOLS, onTool:orchTool
+    });
+    history.push({ role:'assistant', content:reply });
+    removeTyping(tid);
+
+    const dIn = stats.inTok - snapIn, dOut = stats.outTok - snapOut;
+    const cost = dIn * IN_RATE + dOut * OUT_RATE;
+    appendMsg('ai', reply, { in:dIn, out:dOut, cost });
+    addTurn(text, cost);
+  } catch(err) {
+    removeTyping(tid);
+    appendMsg('ai', `Error: ${err.message}`);
+    toast(err.message, true);
+  } finally {
+    allIdle();
+    loading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function suggest(t) { document.getElementById('chatInput').value = t; sendMessage(); }
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+function hideEmpty() { document.getElementById('emptyState')?.remove(); }
+
+function appendMsg(role, text, meta) {
+  const c = document.getElementById('chatMsgs');
+  const d = document.createElement('div');
+  d.className = `msg ${role==='user'?'user':'ai'}`;
+  const lbl = role==='user' ? 'You' : 'Anvil AI';
+  let metaHtml = '';
+  if (meta) metaHtml = `<div class="msg-meta"><span>↑${meta.in.toLocaleString()} ↓${meta.out.toLocaleString()}</span><span>·</span><span>$${meta.cost.toFixed(6)}</span></div>`;
+  d.innerHTML = `<div class="msg-role">${lbl}</div><div class="bubble">${esc(text)}</div>${metaHtml}`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function addTyping() {
+  const c = document.getElementById('chatMsgs');
+  const id = 'ty'+Date.now();
+  const d = document.createElement('div');
+  d.id = id; d.className = 'msg ai';
+  d.innerHTML = `<div class="msg-role">Anvil AI</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+  return id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+function setActive(id, txt) {
+  document.getElementById(`card-${id}`)?.classList.add('active');
+  const s = document.getElementById(`st-${id}`); if(s) s.textContent = txt;
+}
+function setIdle(id) {
+  document.getElementById(`card-${id}`)?.classList.remove('active');
+  const s = document.getElementById(`st-${id}`); if(s) s.textContent = 'Idle';
+}
+function allIdle() { ['orchestrator','business','ui'].forEach(setIdle); }
+
+function logTool(agentId, name, result) {
+  const log = document.getElementById('toolLog');
+  // Remove placeholder
+  log.querySelector('div[style]')?.remove();
+  const d = document.createElement('div'); d.className = 'te';
+  const clr = {orchestrator:'#6C63FF',business:'#34D399',ui:'#60A5FA'}[agentId]||'#888';
+  const preview = String(result).substring(0,90)+(String(result).length>90?'…':'');
+  d.innerHTML = `<div class="te-head"><span class="te-name">${esc(name)}</span><span class="te-agent" style="color:${clr}">${agentId}</span></div><div class="te-result">${esc(preview)}</div>`;
+  log.insertBefore(d, log.firstChild);
+}
+
+function refreshStats() {
+  const total = stats.inTok + stats.outTok;
+  const inC = stats.inTok * IN_RATE, outC = stats.outTok * OUT_RATE, totC = inC + outC;
+  document.getElementById('sTokIn').textContent    = stats.inTok.toLocaleString();
+  document.getElementById('sTokOut').textContent   = stats.outTok.toLocaleString();
+  document.getElementById('sTokTotal').textContent = total.toLocaleString();
+  document.getElementById('sApiCalls').textContent = stats.calls.toLocaleString();
+  const s = totC.toFixed(6), [d,c] = s.split('.');
+  document.getElementById('cDollar').textContent = d;
+  document.getElementById('cCents').textContent  = c;
+  document.getElementById('inCost').textContent  = `$${inC.toFixed(6)}`;
+  document.getElementById('outCost').textContent = `$${outC.toFixed(6)}`;
+}
+
+function addTurn(q, cost) {
+  const list = document.getElementById('turnList');
+  list.querySelector('div[style]')?.remove();
+  const d = document.createElement('div'); d.className = 'turn-item';
+  const sq = q.length>34?q.slice(0,34)+'…':q;
+  d.innerHTML = `<span class="turn-q">${esc(sq)}</span><span class="turn-c">$${cost.toFixed(5)}</span>`;
+  list.insertBefore(d, list.firstChild);
+}
+
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v) { toast('Paste your API key first', true); return; }
+  apiKey = v;
+  localStorage.setItem('anvil_key', v);
+  document.getElementById('connDot').className = 'status-dot ok';
+  toast('API key saved — ready to chat');
+}
+
+function clearSession() {
+  history = []; stats = { inTok:0, outTok:0, calls:0 };
+  refreshStats(); allIdle();
+  document.getElementById('chatMsgs').innerHTML = `<div class="empty" id="emptyState">
+    <div class="empty-icon">⚡</div><h2>Anvil AI</h2>
+    <p>Multi-agent system for Shree Iron Works. Ask about orders, inventory, invoices, or give navigation commands.</p>
+    <div class="chips">
+      <span class="chip" onclick="suggest('Show all active orders')">Active orders</span>
+      <span class="chip" onclick="suggest('Which inventory items are low on stock?')">Low stock alert</span>
+      <span class="chip" onclick="suggest('What is the total outstanding invoice amount?')">Invoice totals</span>
+      <span class="chip" onclick="suggest('Give me a business summary')">Business summary</span>
+      <span class="chip" onclick="suggest('Advance order #1042 to the next stage')">Advance #1042</span>
+      <span class="chip" onclick="suggest('Show details for order 1044')">Order #1044 detail</span>
+      <span class="chip" onclick="suggest('Navigate to the inventory screen')">Go to inventory</span>
+      <span class="chip" onclick="suggest('Show all overdue invoices')">Overdue invoices</span>
+    </div></div>`;
+  document.getElementById('toolLog').innerHTML = '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:16px 0">No tool calls yet</div>';
+  document.getElementById('turnList').innerHTML = '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:14px 0">No turns yet</div>';
+}
+
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr?' err':'');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+
+// Init
+window.addEventListener('load', ()=>{
+  const k = localStorage.getItem('anvil_key');
+  if (k) { apiKey=k; document.getElementById('apiKeyInput').value=k; document.getElementById('connDot').className='status-dot ok'; }
+});
+</script>
+</body>
+</html>

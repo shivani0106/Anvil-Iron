@@ -81,13 +81,15 @@ class OrderDetailScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        ctx.read<OrdersCubit>().advanceStage(orderId);
-                        final updated = ctx.read<OrdersCubit>().getOrderById(orderId);
+                      onPressed: () async {
+                        final ordersCubit = ctx.read<OrdersCubit>();
+                        final navCubit = ctx.read<NavigationCubit>();
+                        await ordersCubit.advanceStage(orderId);
+                        final updated = ordersCubit.getOrderById(orderId);
                         if (updated != null && updated.delivered) {
-                          ctx.read<NavigationCubit>().showToast('Order #$orderId delivered ✓');
+                          navCubit.showToast('Order #$orderId delivered ✓');
                         } else if (updated != null) {
-                          ctx.read<NavigationCubit>().showToast('Moved to ${updated.stageLabel}');
+                          navCubit.showToast('Moved to ${updated.stageLabel}');
                         }
                       },
                       child: Text(advLabel),

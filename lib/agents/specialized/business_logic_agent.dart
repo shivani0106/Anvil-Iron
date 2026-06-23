@@ -176,13 +176,13 @@ When reporting lists, use bullet points. When reporting numbers, include context
     });
   }
 
-  String _advanceOrderStage(Map<String, dynamic> args) {
+  Future<String> _advanceOrderStage(Map<String, dynamic> args) async {
     final id = args['order_id'] as int;
     final before = ordersCubit.getOrderById(id);
     if (before == null) return 'Order #$id not found.';
     if (before.delivered) return 'Order #$id is already delivered.';
 
-    ordersCubit.advanceStage(id);
+    await ordersCubit.advanceStage(id);
 
     final after = ordersCubit.getOrderById(id);
     return 'Order #$id advanced from "${before.stageLabel}" to "${after?.stageLabel ?? "Delivered"}".';

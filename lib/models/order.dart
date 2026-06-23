@@ -39,6 +39,37 @@ class Order extends Equatable {
 
   bool get isActive => !delivered;
 
+  factory Order.fromJson(Map<String, dynamic> json) => Order(
+        id: json['id'] as int,
+        customer: json['customer'] as String,
+        item: json['item'] as String,
+        spec: (json['spec'] as String?) ?? '',
+        qty: json['qty'] as int,
+        material: (json['material'] as String?) ?? '',
+        due: json['due'] as String,
+        ordered: json['ordered'] as String,
+        stage: OrderStage.values.firstWhere(
+          (s) => s.name == json['stage'],
+          orElse: () => OrderStage.queued,
+        ),
+        delivered: (json['delivered'] as bool?) ?? false,
+        drawing: json['drawing'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'customer': customer,
+        'item': item,
+        'spec': spec,
+        'qty': qty,
+        'material': material,
+        'due': due,
+        'ordered': ordered,
+        'stage': stage.name,
+        'delivered': delivered,
+        'drawing': drawing,
+      };
+
   Order copyWith({
     int? id,
     String? customer,

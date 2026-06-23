@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'cubits/auth/auth_cubit.dart';
+import 'cubits/auth/auth_state.dart';
 import 'cubits/navigation/navigation_cubit.dart';
 import 'cubits/navigation/navigation_state.dart';
 import 'cubits/orders/orders_cubit.dart';
 import 'cubits/inventory/inventory_cubit.dart';
 import 'cubits/invoices/invoices_cubit.dart';
 import 'cubits/agent/agent_cubit.dart';
+import 'screens/auth/sign_in_screen.dart';
 import 'screens/hub/hub_screen.dart';
 import 'screens/orders/orders_screen.dart';
 import 'screens/orders/order_detail_screen.dart';
@@ -26,6 +29,68 @@ class IronWorksApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider(
+      // AuthCubit lives at the top so every screen can read it.
+      create: (_) => AuthCubit(),
+      child: MaterialApp(
+        title: 'Shree Iron Works',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.theme,
+        home: const _AuthGate(),
+      ),
+    );
+  }
+}
+
+/// Listens to [AuthCubit] and renders either [LoginScreen] or the full app.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AppAuthState>(
+      builder: (ctx, authState) {
+        // Splash — Supabase is resolving the stored session
+        if (authState is AppAuthInitial) return const _SplashScreen();
+
+        // Not authenticated — show login
+        if (authState is AppAuthUnauthenticated ||
+            authState is AppAuthError ||
+            authState is AppAuthLoading) {
+          return const SignInScreen();
+        }
+
+        // Authenticated — mount the full app with all cubits
+        return const _AppProviders();
+      },
+    );
+  }
+}
+
+/// Thin splash shown during the ~150 ms Supabase session restore.
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Color(0xFFF6F4EF),
+      body: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE07A3C)),
+          strokeWidth: 2.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// All business cubits — only created once auth is confirmed.
+class _AppProviders extends StatelessWidget {
+  const _AppProviders();
+
+  @override
+  Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => NavigationCubit()),
@@ -41,12 +106,7 @@ class IronWorksApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp(
-        title: 'Shree Iron Works',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.theme,
-        home: const _AppRoot(),
-      ),
+      child: const _AppRoot(),
     );
   }
 }

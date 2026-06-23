@@ -30,6 +30,25 @@ class Invoice extends Equatable {
     }
   }
 
+  factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
+        id: json['id'] as String,
+        customer: json['customer'] as String,
+        amount: (json['amount'] as num).toDouble(),
+        status: InvoiceStatus.values.firstWhere(
+          (s) => s.name == json['status'],
+          orElse: () => InvoiceStatus.outstanding,
+        ),
+        date: json['date'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'customer': customer,
+        'amount': amount,
+        'status': status.name,
+        'date': date,
+      };
+
   @override
   List<Object?> get props => [id, customer, amount, status, date];
 }
@@ -59,6 +78,25 @@ class Quote extends Equatable {
         return 'Lost';
     }
   }
+
+  factory Quote.fromJson(Map<String, dynamic> json) => Quote(
+        id: json['id'] as String,
+        customer: json['customer'] as String,
+        amount: (json['amount'] as num).toDouble(),
+        status: QuoteStatus.values.firstWhere(
+          (s) => s.name == json['status'],
+          orElse: () => QuoteStatus.pending,
+        ),
+        date: json['date'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'customer': customer,
+        'amount': amount,
+        'status': status.name,
+        'date': date,
+      };
 
   @override
   List<Object?> get props => [id, customer, amount, status, date];

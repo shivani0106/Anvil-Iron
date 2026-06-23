@@ -13,6 +13,7 @@ class OrdersState extends Equatable {
   final String formMaterial;
   final String formDue;
   final String formError;
+  final bool isLoading;
 
   const OrdersState({
     required this.orders,
@@ -24,6 +25,7 @@ class OrdersState extends Equatable {
     this.formMaterial = '',
     this.formDue = '',
     this.formError = '',
+    this.isLoading = false,
   });
 
   List<Order> get filteredOrders {
@@ -60,6 +62,7 @@ class OrdersState extends Equatable {
     String? formMaterial,
     String? formDue,
     String? formError,
+    bool? isLoading,
   }) {
     return OrdersState(
       orders: orders ?? this.orders,
@@ -71,9 +74,10 @@ class OrdersState extends Equatable {
       formMaterial: formMaterial ?? this.formMaterial,
       formDue: formDue ?? this.formDue,
       formError: formError ?? this.formError,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
   @override
-  List<Object?> get props => [orders, filter, searchQuery, formCustomer, formItem, formQty, formMaterial, formDue, formError];
+  List<Object?> get props => [orders, filter, searchQuery, formCustomer, formItem, formQty, formMaterial, formDue, formError, isLoading];
 }

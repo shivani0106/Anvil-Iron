@@ -5,11 +5,13 @@ class InventoryState extends Equatable {
   final List<InventoryItem> items;
   final String searchQuery;
   final String stockInput;
+  final bool isLoading;
 
   const InventoryState({
     required this.items,
     this.searchQuery = '',
     this.stockInput = '',
+    this.isLoading = false,
   });
 
   List<InventoryItem> get filteredItems {
@@ -24,14 +26,16 @@ class InventoryState extends Equatable {
     List<InventoryItem>? items,
     String? searchQuery,
     String? stockInput,
+    bool? isLoading,
   }) {
     return InventoryState(
       items: items ?? this.items,
       searchQuery: searchQuery ?? this.searchQuery,
       stockInput: stockInput ?? this.stockInput,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
   @override
-  List<Object?> get props => [items, searchQuery, stockInput];
+  List<Object?> get props => [items, searchQuery, stockInput, isLoading];
 }

@@ -13,6 +13,20 @@ class TeamMember extends Equatable {
     required this.task,
   });
 
+  factory TeamMember.fromJson(Map<String, dynamic> json) => TeamMember(
+        name: json['name'] as String,
+        initials: (json['initials'] as String?) ?? '',
+        role: (json['role'] as String?) ?? '',
+        task: (json['task'] as String?) ?? '',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'initials': initials,
+        'role': role,
+        'task': task,
+      };
+
   @override
   List<Object?> get props => [name, initials, role, task];
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../cubits/auth/auth_cubit.dart';
+import '../../cubits/auth/auth_state.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/navigation/navigation_state.dart';
 import '../../cubits/orders/orders_cubit.dart';
@@ -98,6 +100,14 @@ class HubScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext ctx, NavigationCubit nav) {
+    final authState = ctx.read<AuthCubit>().state;
+    final firstName = authState is AppAuthAuthenticated
+        ? authState.firstName
+        : 'there';
+    final initials = authState is AppAuthAuthenticated
+        ? authState.initials
+        : '?';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
       child: Row(
@@ -117,9 +127,9 @@ class HubScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Hello, Mikul',
-                  style: TextStyle(
+                Text(
+                  'Hello, $firstName',
+                  style: const TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -129,6 +139,7 @@ class HubScreen extends StatelessWidget {
               ],
             ),
           ),
+          // AI assistant button
           GestureDetector(
             onTap: () => nav.navigateTo(AppScreen.agent),
             child: Container(
@@ -139,20 +150,44 @@ class HubScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.auto_awesome_rounded, size: 22, color: AppColors.accent),
+              child: const Icon(Icons.auto_awesome_rounded,
+                  size: 22, color: AppColors.accent),
             ),
           ),
           const SizedBox(width: 10),
+          // Avatar — tap to open profile / logout menu
           GestureDetector(
-            onTap: () => nav.navigateTo(AppScreen.team),
-            child: const AvatarCircle(
-              initials: 'MS',
+            onTap: () => _showProfileMenu(ctx, authState),
+            child: AvatarCircle(
+              initials: initials,
               size: 44,
               bg: AppColors.surface,
               fg: AppColors.tagText,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showProfileMenu(BuildContext ctx, AppAuthState authState) {
+    final displayName = authState is AppAuthAuthenticated
+        ? authState.displayName
+        : 'User';
+    final email = authState is AppAuthAuthenticated
+        ? (authState.user.email ?? '')
+        : '';
+
+    showModalBottomSheet<void>(
+      context: ctx,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ProfileSheet(
+        displayName: displayName,
+        email: email,
+        onLogout: () {
+          Navigator.of(ctx).pop(); // close sheet first
+          ctx.read<AuthCubit>().signOut();
+        },
       ),
     );
   }
@@ -327,4 +362,121 @@ class _QuickItem {
   final String label;
   final VoidCallback onTap;
   _QuickItem(this.icon, this.label, this.onTap);
+}
+
+// ── Profile / logout bottom sheet ─────────────────────────────────────────────
+
+class _ProfileSheet extends StatelessWidget {
+  final String displayName;
+  final String email;
+  final VoidCallback onLogout;
+
+  const _ProfileSheet({
+    required this.displayName,
+    required this.email,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 28),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 10, bottom: 6),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // User info
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentSoft,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.person_outline_rounded,
+                      color: AppColors.accent, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (email.isNotEmpty)
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 24, color: AppColors.divider),
+          // Logout row
+          InkWell(
+            onTap: onLogout,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.errorSoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.logout_rounded,
+                        color: AppColors.error, size: 18),
+                  ),
+                  const SizedBox(width: 14),
+                  const Text(
+                    'Sign out',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

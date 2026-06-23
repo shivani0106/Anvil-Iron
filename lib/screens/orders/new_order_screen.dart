@@ -91,8 +91,8 @@ class NewOrderScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      final newId = ordersCubit.submitOrder();
+                    onPressed: () async {
+                      final newId = await ordersCubit.submitOrder();
                       if (newId != null) {
                         nav.replaceStack([
                           const ScreenEntry(screen: AppScreen.hub),
