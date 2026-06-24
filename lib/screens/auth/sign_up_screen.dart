@@ -18,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _factoryCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _obscurePassword = true;
@@ -27,6 +28,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _emailCtrl.dispose();
+    _factoryCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
@@ -38,6 +40,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           fullName: _nameCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
+          factoryName: _factoryCtrl.text.trim(),
         );
   }
 
@@ -45,8 +48,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AppAuthState>(
       listenWhen: (_, s) =>
-          s is AppAuthError || s is AppAuthConfirmationRequired,
+          s is AppAuthAuthenticated ||
+          s is AppAuthError ||
+          s is AppAuthConfirmationRequired,
       listener: (ctx, state) {
+        if (state is AppAuthAuthenticated) {
+          // Account created and session is live — go straight to main app.
+          if (context.mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return;
+        }
         if (state is AppAuthError) {
           _showBar(ctx, state.message, isError: true);
           ctx.read<AuthCubit>().clearError();
@@ -59,7 +71,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             isError: false,
           );
           ctx.read<AuthCubit>().clearConfirmation();
-          // Pop back to sign-in so the user can log in after confirming.
           if (context.mounted) Navigator.of(context).pop();
         }
       },
@@ -74,10 +85,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  // Back to sign-in
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 18, color: AppColors.textPrimary),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 18,
+                        color: isLoading
+                            ? AppColors.textMuted
+                            : AppColors.textPrimary),
                     padding: EdgeInsets.zero,
                     onPressed:
                         isLoading ? null : () => Navigator.of(context).pop(),
@@ -87,8 +100,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 28),
                   const AuthHeadline(
                     title: 'Create account',
-                    subtitle:
-                        'Join Shree Iron Works. Your details are stored securely.',
+                    subtitle: 'Your details are stored securely.',
                   ),
                   const SizedBox(height: 28),
                   Form(
@@ -114,6 +126,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         const SizedBox(height: 14),
                         AuthField(
+                          controller: _factoryCtrl,
+                          label: 'Factory name',
+                          hint: 'e.g. Shree Iron Works',
+                          keyboardType: TextInputType.text,
+                          validator: AppValidators.factoryName,
+                          enabled: !isLoading,
+                        ),
+                        const SizedBox(height: 14),
+                        AuthField(
                           controller: _passwordCtrl,
                           label: 'Password',
                           hint: 'Min. 8 characters',
@@ -133,8 +154,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        // Confirm-password validator captures the live password
-                        // value at validation time, not at widget construction.
                         AuthField(
                           controller: _confirmCtrl,
                           label: 'Confirm password',

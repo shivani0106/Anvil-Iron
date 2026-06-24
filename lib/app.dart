@@ -8,6 +8,11 @@ import 'cubits/navigation/navigation_state.dart';
 import 'cubits/orders/orders_cubit.dart';
 import 'cubits/inventory/inventory_cubit.dart';
 import 'cubits/invoices/invoices_cubit.dart';
+import 'cubits/customers/customers_cubit.dart';
+import 'cubits/suppliers/suppliers_cubit.dart';
+import 'cubits/machines/machines_cubit.dart';
+import 'cubits/materials/materials_cubit.dart';
+import 'cubits/teams_mgmt/teams_mgmt_cubit.dart';
 import 'cubits/agent/agent_cubit.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/hub/hub_screen.dart';
@@ -23,6 +28,8 @@ import 'screens/machines/machines_screen.dart';
 import 'screens/reports/reports_screen.dart';
 import 'screens/team/team_screen.dart';
 import 'screens/agent/agent_chat_screen.dart';
+import 'screens/customers/customers_screen.dart';
+import 'screens/materials/materials_screen.dart';
 
 class IronWorksApp extends StatelessWidget {
   const IronWorksApp({super.key});
@@ -30,10 +37,9 @@ class IronWorksApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      // AuthCubit lives at the top so every screen can read it.
       create: (_) => AuthCubit(),
       child: MaterialApp(
-        title: 'Shree Iron Works',
+        title: 'Anvil',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
         home: const _AuthGate(),
@@ -42,7 +48,6 @@ class IronWorksApp extends StatelessWidget {
   }
 }
 
-/// Listens to [AuthCubit] and renders either [LoginScreen] or the full app.
 class _AuthGate extends StatelessWidget {
   const _AuthGate();
 
@@ -50,24 +55,20 @@ class _AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AppAuthState>(
       builder: (ctx, authState) {
-        // Splash — Supabase is resolving the stored session
         if (authState is AppAuthInitial) return const _SplashScreen();
 
-        // Not authenticated — show login
         if (authState is AppAuthUnauthenticated ||
             authState is AppAuthError ||
             authState is AppAuthLoading) {
           return const SignInScreen();
         }
 
-        // Authenticated — mount the full app with all cubits
         return const _AppProviders();
       },
     );
   }
 }
 
-/// Thin splash shown during the ~150 ms Supabase session restore.
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
 
@@ -85,7 +86,6 @@ class _SplashScreen extends StatelessWidget {
   }
 }
 
-/// All business cubits — only created once auth is confirmed.
 class _AppProviders extends StatelessWidget {
   const _AppProviders();
 
@@ -97,6 +97,11 @@ class _AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => OrdersCubit()),
         BlocProvider(create: (_) => InventoryCubit()),
         BlocProvider(create: (_) => InvoicesCubit()),
+        BlocProvider(create: (_) => CustomersCubit()),
+        BlocProvider(create: (_) => SuppliersCubit()),
+        BlocProvider(create: (_) => MachinesCubit()),
+        BlocProvider(create: (_) => MaterialsCubit()),
+        BlocProvider(create: (_) => TeamsMgmtCubit()),
         BlocProvider(
           create: (ctx) => AgentCubit(
             navigationCubit: ctx.read<NavigationCubit>(),
@@ -142,6 +147,10 @@ class _AppRoot extends StatelessWidget {
         return const TeamScreen();
       case AppScreen.agent:
         return const AgentChatScreen();
+      case AppScreen.customers:
+        return const CustomersScreen();
+      case AppScreen.materials:
+        return const MaterialsScreen();
     }
   }
 
@@ -154,7 +163,7 @@ class _AppRoot extends StatelessWidget {
             Navigator(
               pages: navState.stack.map((entry) {
                 return MaterialPage(
-                  key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}'),
+                  key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}-${entry.customerId}'),
                   child: _screenForEntry(entry),
                 );
               }).toList(),
@@ -162,7 +171,6 @@ class _AppRoot extends StatelessWidget {
                 ctx.read<NavigationCubit>().back();
               },
             ),
-            // Toast overlay
             if (navState.toast != null)
               Positioned(
                 left: 0,

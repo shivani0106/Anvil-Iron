@@ -2,6 +2,16 @@ import 'package:equatable/equatable.dart';
 
 enum OrderStage { queued, cutting, welding, qc, ready }
 
+enum WorkType { inHouse, external }
+
+extension WorkTypeX on WorkType {
+  String get label => this == WorkType.inHouse ? 'In House Work' : 'External Work';
+  String get value => this == WorkType.inHouse ? 'in_house' : 'external';
+
+  static WorkType fromValue(String? v) =>
+      v == 'external' ? WorkType.external : WorkType.inHouse;
+}
+
 class Order extends Equatable {
   final int id;
   final String customer;
@@ -14,6 +24,9 @@ class Order extends Equatable {
   final OrderStage stage;
   final bool delivered;
   final String? drawing;
+  final WorkType workType;
+  final int? customerId;
+  final int? supplierId;
 
   const Order({
     required this.id,
@@ -27,6 +40,9 @@ class Order extends Equatable {
     required this.stage,
     this.delivered = false,
     this.drawing,
+    this.workType = WorkType.inHouse,
+    this.customerId,
+    this.supplierId,
   });
 
   static const List<String> stageLabels = ['Queued', 'Cutting', 'Welding', 'QC', 'Ready'];
@@ -54,6 +70,9 @@ class Order extends Equatable {
         ),
         delivered: (json['delivered'] as bool?) ?? false,
         drawing: json['drawing'] as String?,
+        workType: WorkTypeX.fromValue(json['work_type'] as String?),
+        customerId: json['customer_id'] as int?,
+        supplierId: json['supplier_id'] as int?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -68,6 +87,9 @@ class Order extends Equatable {
         'stage': stage.name,
         'delivered': delivered,
         'drawing': drawing,
+        'work_type': workType.value,
+        'customer_id': customerId,
+        'supplier_id': supplierId,
       };
 
   Order copyWith({
@@ -82,6 +104,9 @@ class Order extends Equatable {
     OrderStage? stage,
     bool? delivered,
     String? drawing,
+    WorkType? workType,
+    int? customerId,
+    int? supplierId,
   }) {
     return Order(
       id: id ?? this.id,
@@ -95,9 +120,15 @@ class Order extends Equatable {
       stage: stage ?? this.stage,
       delivered: delivered ?? this.delivered,
       drawing: drawing ?? this.drawing,
+      workType: workType ?? this.workType,
+      customerId: customerId ?? this.customerId,
+      supplierId: supplierId ?? this.supplierId,
     );
   }
 
   @override
-  List<Object?> get props => [id, customer, item, spec, qty, material, due, ordered, stage, delivered, drawing];
+  List<Object?> get props => [
+        id, customer, item, spec, qty, material, due, ordered,
+        stage, delivered, drawing, workType, customerId, supplierId,
+      ];
 }

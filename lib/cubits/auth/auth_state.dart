@@ -42,6 +42,11 @@ class AppAuthAuthenticated extends AppAuthState {
       .map((w) => w[0].toUpperCase())
       .join();
 
+  /// Factory name set during sign-up. Falls back to empty string if not set
+  /// (e.g. Google accounts signed up before this field existed).
+  String get factoryName =>
+      (user.userMetadata?['factory_name'] as String?)?.trim() ?? '';
+
   /// Google profile picture URL (null for email/password accounts).
   String? get avatarUrl =>
       user.userMetadata?['avatar_url'] as String? ??

@@ -20,4 +20,16 @@ class OrdersRepository {
       'delivered': delivered,
     }).eq('id', id);
   }
+
+  Future<void> updateWorkType(int id, WorkType workType) async {
+    await _client.from('orders').update({'work_type': workType.value}).eq('id', id);
+  }
+
+  Future<void> linkCustomer(int orderId, int? customerId) async {
+    await _client.from('orders').update({'customer_id': customerId}).eq('id', orderId);
+  }
+
+  Future<void> linkSupplier(int orderId, int? supplierId) async {
+    await _client.from('orders').update({'supplier_id': supplierId}).eq('id', orderId);
+  }
 }

@@ -107,6 +107,9 @@ class HubScreen extends StatelessWidget {
     final initials = authState is AppAuthAuthenticated
         ? authState.initials
         : '?';
+    final factoryName = authState is AppAuthAuthenticated
+        ? authState.factoryName
+        : '';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
@@ -117,15 +120,16 @@ class HubScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'SHREE IRON WORKS',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.06,
+                if (factoryName.isNotEmpty)
+                  Text(
+                    factoryName.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.06,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 4),
                 Text(
                   'Hello, $firstName',
@@ -140,21 +144,21 @@ class HubScreen extends StatelessWidget {
             ),
           ),
           // AI assistant button
-          GestureDetector(
-            onTap: () => nav.navigateTo(AppScreen.agent),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(Icons.auto_awesome_rounded,
-                  size: 22, color: AppColors.accent),
-            ),
-          ),
-          const SizedBox(width: 10),
+          // GestureDetector(
+          //   onTap: () => nav.navigateTo(AppScreen.agent),
+          //   child: Container(
+          //     width: 44,
+          //     height: 44,
+          //     decoration: BoxDecoration(
+          //       color: AppColors.surface,
+          //       borderRadius: BorderRadius.circular(14),
+          //       border: Border.all(color: AppColors.border),
+          //     ),
+          //     child: const Icon(Icons.auto_awesome_rounded,
+          //         size: 22, color: AppColors.accent),
+          //   ),
+          // ),
+          // const SizedBox(width: 10),
           // Avatar — tap to open profile / logout menu
           GestureDetector(
             onTap: () => _showProfileMenu(ctx, authState),
@@ -275,6 +279,7 @@ class HubScreen extends StatelessWidget {
       _QuickItem(Icons.description_outlined, 'Drawings', () => nav.navigateTo(AppScreen.drawings)),
       _QuickItem(Icons.store_outlined, 'Suppliers', () => nav.navigateTo(AppScreen.suppliers)),
       _QuickItem(Icons.bar_chart_outlined, 'Reports', () => nav.navigateTo(AppScreen.reports)),
+      _QuickItem(Icons.category_outlined, 'Materials', () => nav.navigateTo(AppScreen.materials)),
       _QuickItem(Icons.people_outline, 'Team', () => nav.navigateTo(AppScreen.team)),
       _QuickItem(Icons.list_alt_outlined, 'Orders', () => nav.navigateTo(AppScreen.orders)),
     ];

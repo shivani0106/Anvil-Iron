@@ -4,6 +4,14 @@
 class AppValidators {
   AppValidators._();
 
+  static String? factoryName(String? value) {
+    final v = value?.trim() ?? '';
+    if (v.isEmpty) return 'Factory name is required';
+    if (v.length < 2) return 'Factory name must be at least 2 characters';
+    if (v.length > 100) return 'Factory name is too long';
+    return null;
+  }
+
   static String? fullName(String? value) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return 'Full name is required';

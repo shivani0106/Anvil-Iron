@@ -64,12 +64,14 @@ class AuthService {
 
   // ── Email / password ────────────────────────────────────────────────────────
 
-  /// Registers a new user. Stores [fullName] in Supabase user_metadata so
-  /// every part of the app can display it without a separate DB table.
+  /// Registers a new user. Stores [fullName] and [factoryName] in Supabase
+  /// user_metadata so every part of the app can display them without a
+  /// separate DB table.
   Future<AuthResult> signUpWithEmail({
     required String fullName,
     required String email,
     required String password,
+    required String factoryName,
   }) async {
     try {
       final response = await _client.auth.signUp(
@@ -78,6 +80,7 @@ class AuthService {
         data: {
           'full_name': fullName,
           'display_name': fullName,
+          'factory_name': factoryName,
         },
       );
 

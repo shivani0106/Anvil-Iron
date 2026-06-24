@@ -76,7 +76,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 36),
                   const AuthHeadline(
                     title: 'Welcome back',
-                    subtitle: 'Sign in to your Shree Iron Works account.',
+                    subtitle: 'Sign in to your account.',
                   ),
                   const SizedBox(height: 32),
                   Form(

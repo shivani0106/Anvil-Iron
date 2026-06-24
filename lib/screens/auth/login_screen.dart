@@ -97,7 +97,7 @@ class _Logo extends StatelessWidget {
               ),
             ),
             Text(
-              'Shree Iron Works',
+              'Factory Manager',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
           ],

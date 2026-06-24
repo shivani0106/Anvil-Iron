@@ -14,17 +14,25 @@ enum AppScreen {
   reports,
   team,
   agent,
+  customers,
+  materials,
 }
 
 class ScreenEntry extends Equatable {
   final AppScreen screen;
   final int? orderId;
   final int? materialId;
+  final int? customerId;
 
-  const ScreenEntry({required this.screen, this.orderId, this.materialId});
+  const ScreenEntry({
+    required this.screen,
+    this.orderId,
+    this.materialId,
+    this.customerId,
+  });
 
   @override
-  List<Object?> get props => [screen, orderId, materialId];
+  List<Object?> get props => [screen, orderId, materialId, customerId];
 }
 
 class NavigationState extends Equatable {

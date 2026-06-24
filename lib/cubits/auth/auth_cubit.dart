@@ -34,11 +34,12 @@ class AuthCubit extends Cubit<AppAuthState> {
 
   // ── Email / password ──────────────────────────────────────────────────────
 
-  /// Creates a new account. Stores [fullName] in Supabase user_metadata.
+  /// Creates a new account. Stores [fullName] and [factoryName] in Supabase user_metadata.
   Future<void> signUpWithEmail({
     required String fullName,
     required String email,
     required String password,
+    required String factoryName,
   }) async {
     if (state is AppAuthLoading) return;
     emit(const AppAuthLoading());
@@ -47,6 +48,7 @@ class AuthCubit extends Cubit<AppAuthState> {
       fullName: fullName,
       email: email,
       password: password,
+      factoryName: factoryName,
     );
 
     switch (result) {

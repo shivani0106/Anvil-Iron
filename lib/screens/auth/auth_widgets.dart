@@ -5,6 +5,87 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 
+// ── Anvil icon mark (amber gradient + custom anvil shape) ─────────────────────
+
+class AnvilIconMark extends StatelessWidget {
+  final double size;
+  final bool shadow;
+  const AnvilIconMark({super.key, this.size = 46, this.shadow = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment(-0.5, -1.0),
+          end: Alignment(0.5, 1.0),
+          colors: [Color(0xFFEE8A47), Color(0xFFE07A3C), Color(0xFFC9612A)],
+          stops: [0.0, 0.52, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(size * 0.25),
+        boxShadow: shadow
+            ? const [
+                BoxShadow(
+                  color: Color(0x99E07A3C),
+                  blurRadius: 28,
+                  offset: Offset(0, 12),
+                  spreadRadius: -10,
+                ),
+              ]
+            : null,
+      ),
+      child: CustomPaint(
+        painter: _AnvilPainter(),
+        size: Size(size, size),
+      ),
+    );
+  }
+}
+
+class _AnvilPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final sx = size.width / 64;
+    final sy = size.height / 64;
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(6 * sx, 23 * sy)
+      ..lineTo(18 * sx, 16 * sy)
+      ..lineTo(54 * sx, 16 * sy)
+      ..cubicTo(55.1 * sx, 16 * sy, 56 * sx, 16.9 * sy, 56 * sx, 18 * sy)
+      ..lineTo(56 * sx, 24 * sy)
+      ..cubicTo(56 * sx, 25.1 * sy, 55.1 * sx, 26 * sy, 54 * sx, 26 * sy)
+      ..lineTo(40 * sx, 26 * sy)
+      ..lineTo(38 * sx, 30.5 * sy)
+      ..lineTo(38 * sx, 33 * sy)
+      ..lineTo(49 * sx, 49 * sy)
+      ..cubicTo(49.6 * sx, 49.9 * sy, 49 * sx, 51 * sy, 48 * sx, 51 * sy)
+      ..lineTo(46 * sx, 51 * sy)
+      ..lineTo(46 * sx, 53 * sy)
+      ..cubicTo(46 * sx, 54.1 * sy, 45.1 * sx, 55 * sy, 44 * sx, 55 * sy)
+      ..lineTo(22 * sx, 55 * sy)
+      ..cubicTo(20.9 * sx, 55 * sy, 20 * sx, 54.1 * sy, 20 * sx, 53 * sy)
+      ..lineTo(20 * sx, 51 * sy)
+      ..lineTo(18 * sx, 51 * sy)
+      ..cubicTo(17 * sx, 51 * sy, 16.4 * sx, 49.9 * sy, 17 * sx, 49 * sy)
+      ..lineTo(28 * sx, 33 * sy)
+      ..lineTo(28 * sx, 30.5 * sy)
+      ..lineTo(26 * sx, 26 * sy)
+      ..lineTo(18 * sx, 26 * sy)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_AnvilPainter old) => false;
+}
+
 // ── Logo ─────────────────────────────────────────────────────────────────────
 
 class AuthAppLogo extends StatelessWidget {
@@ -14,16 +95,7 @@ class AuthAppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: AppColors.accent,
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: const Icon(Icons.precision_manufacturing_rounded,
-              color: Colors.white, size: 24),
-        ),
+        const AnvilIconMark(size: 46, shadow: false),
         const SizedBox(width: 14),
         const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,11 +110,12 @@ class AuthAppLogo extends StatelessWidget {
               ),
             ),
             Text(
-              'Shree Iron Works',
+              'FACTORY MANAGER',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.18,
               ),
             ),
           ],
