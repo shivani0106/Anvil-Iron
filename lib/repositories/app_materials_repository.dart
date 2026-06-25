@@ -10,11 +10,8 @@ class AppMaterialsRepository {
   }
 
   Future<AppMaterial> create(AppMaterial material) async {
-    final data = await _client
-        .from('materials')
-        .insert(material.toInsertJson())
-        .select()
-        .single();
+    final json = material.toInsertJson()..['user_id'] = _client.auth.currentUser!.id;
+    final data = await _client.from('materials').insert(json).select().single();
     return AppMaterial.fromJson(data);
   }
 

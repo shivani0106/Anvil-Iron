@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
@@ -59,11 +60,10 @@ class NewOrderScreen extends StatelessWidget {
                   onChanged: (v) => ordersCubit.updateForm(material: v ?? ''),
                 ),
                 const SizedBox(height: 14),
-                _buildField(
-                  label: 'Due date',
-                  hint: 'e.g. 30 Jun',
+                _buildDatePickerField(
+                  context: ctx,
                   value: state.formDue,
-                  onChanged: (v) => ordersCubit.updateForm(due: v),
+                  ordersCubit: ordersCubit,
                 ),
                 const SizedBox(height: 14),
                 _buildWorkTypeField(
@@ -144,6 +144,80 @@ class NewOrderScreen extends StatelessWidget {
           keyboardType: keyboardType,
           decoration: InputDecoration(hintText: hint),
           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required BuildContext context,
+    required String value,
+    required OrdersCubit ordersCubit,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Due date',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: () async {
+            final now = DateTime.now();
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: now,
+              firstDate: DateTime(now.year - 1),
+              lastDate: DateTime(now.year + 5),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: AppColors.accent,
+                      onPrimary: Colors.white,
+                      surface: AppColors.surface,
+                      onSurface: AppColors.textPrimary,
+                      onSurfaceVariant: AppColors.textSecondary,
+                      outline: AppColors.border,
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.accent,
+                      ),
+                    ),
+                    dividerColor: AppColors.divider,
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null) {
+              ordersCubit.updateForm(due: DateFormat('d MMM').format(picked));
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value.isEmpty ? 'Select due date' : value,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: value.isEmpty ? AppColors.textMuted : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary),
+              ],
+            ),
+          ),
         ),
       ],
     );

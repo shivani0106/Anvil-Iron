@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/job_details/job_details_cubit.dart';
 import '../../cubits/job_details/job_details_state.dart';
-import '../../models/workflow_step.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/orders/orders_cubit.dart';
 import '../../cubits/orders/orders_state.dart';
@@ -84,9 +83,9 @@ class _OrderDetailView extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildDetailsGrid(order),
                 const SizedBox(height: 20),
-                const Text('Production Stage', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                const Text('Production Stages', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 const SizedBox(height: 14),
-                _buildStagePipeline(order),
+                _buildProductionStages(jobState),
                 const SizedBox(height: 24),
                 if (!advDisabled)
                   SizedBox(
@@ -119,9 +118,6 @@ class _OrderDetailView extends StatelessWidget {
                           style: TextStyle(color: AppColors.statusDelivered, fontSize: 16, fontWeight: FontWeight.w600)),
                     ),
                   ),
-                const SizedBox(height: 28),
-                // ── Production Workflow ────────────────────────────────
-                _WorkflowSection(cubit: ctx.read<JobDetailsCubit>(), steps: jobState.workflowSteps),
                 const SizedBox(height: 28),
                 // ── Materials ──────────────────────────────────────────
                 _SectionHeader(
@@ -281,19 +277,19 @@ class _OrderDetailView extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext ctx, String label, VoidCallback onConfirm) async {
     final confirmed = await showDialog<bool>(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: Text('Delete $label?'),
         content: Text('This $label will be permanently removed.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
-    if (confirmed == true) onConfirm();
+    if (confirmed == true && ctx.mounted) onConfirm();
   }
 
   // ── Detail widgets ─────────────────────────────────────────────────────────
@@ -344,43 +340,61 @@ class _OrderDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildStagePipeline(Order order) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: Order.stageLabels.asMap().entries.map((e) {
-        final i = e.key;
-        final label = e.value;
-        final done = order.delivered || i < order.stage.index;
-        final current = !order.delivered && i == order.stage.index;
-        final isLast = i == Order.stageLabels.length - 1;
-        return Expanded(
-          child: Column(
-            children: [
-              Row(
+  Widget _buildProductionStages(JobDetailsState jobState) {
+    if (jobState.isLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent));
+    }
+    final steps = jobState.workflowSteps;
+    if (steps.isEmpty) {
+      return _EmptySection(label: 'No production stages defined');
+    }
+    return Column(
+      children: steps.asMap().entries.map((entry) {
+        final i = entry.key;
+        final step = entry.value;
+        final isLast = i == steps.length - 1;
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
                 children: [
                   Container(
-                    width: 16,
-                    height: 16,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (done || current) ? AppColors.accent : AppColors.surface,
-                      border: Border.all(color: (done || current) ? AppColors.accent : AppColors.borderLight, width: 2),
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(7),
                     ),
-                    child: done ? const Icon(Icons.check, size: 10, color: Colors.white) : null,
+                    child: Center(
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
                   ),
-                  if (!isLast)
-                    Expanded(child: Container(height: 2, color: done ? AppColors.accent : AppColors.borderLight)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(step.name,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+                  ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: current ? FontWeight.w700 : FontWeight.w500,
-                    color: current ? AppColors.textPrimary : (done ? AppColors.textSecondary : AppColors.textMuted),
-                  )),
-            ],
-          ),
+            ),
+            if (!isLast)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 26),
+                  child: Container(width: 2, height: 8, color: AppColors.borderLight),
+                ),
+              ),
+          ],
         );
       }).toList(),
     );
@@ -925,168 +939,6 @@ class _SheetScaffold extends StatelessWidget {
             child,
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Production Workflow ───────────────────────────────────────────────────────
-
-class _WorkflowSection extends StatefulWidget {
-  final JobDetailsCubit cubit;
-  final List<WorkflowStep> steps;
-
-  const _WorkflowSection({required this.cubit, required this.steps});
-
-  @override
-  State<_WorkflowSection> createState() => _WorkflowSectionState();
-}
-
-class _WorkflowSectionState extends State<_WorkflowSection> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _add() {
-    final name = _controller.text.trim();
-    if (name.isEmpty) return;
-    widget.cubit.addWorkflowStep(name);
-    _controller.clear();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final steps = widget.steps;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text('Production workflow',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const Spacer(),
-            if (steps.isNotEmpty)
-              const Text('▲▼ to reorder',
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        if (steps.isEmpty)
-          _EmptySection(label: 'No workflow steps yet'),
-        ...steps.asMap().entries.map((e) {
-          final i = e.key;
-          final step = e.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(step.name,
-                      style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-                ),
-                _ReorderButton(
-                  icon: Icons.arrow_drop_up,
-                  enabled: i > 0,
-                  onTap: () => widget.cubit.moveWorkflowStepUp(i),
-                ),
-                _ReorderButton(
-                  icon: Icons.arrow_drop_down,
-                  enabled: i < steps.length - 1,
-                  onTap: () => widget.cubit.moveWorkflowStepDown(i),
-                ),
-                const SizedBox(width: 4),
-                GestureDetector(
-                  onTap: () => widget.cubit.deleteWorkflowStep(step.id),
-                  child: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.close, size: 14, color: AppColors.error),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                onSubmitted: (_) => _add(),
-                decoration: const InputDecoration(hintText: 'Add a step...'),
-                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _add,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-                child: const Text('+ Add',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ReorderButton extends StatelessWidget {
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  const _ReorderButton({required this.icon, required this.enabled, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 28,
-        height: 28,
-        margin: const EdgeInsets.only(left: 4),
-        decoration: BoxDecoration(
-          color: enabled ? AppColors.tagBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Icon(icon, size: 20, color: enabled ? AppColors.textSecondary : AppColors.borderLight),
       ),
     );
   }

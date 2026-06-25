@@ -4,28 +4,31 @@ import '../models/team.dart';
 class TeamsRepository {
   final _client = Supabase.instance.client;
 
-  Future<List<Team>> fetchAll() async {
-    final data = await _client.from('teams').select().order('team_name');
-    return (data as List).map((e) => Team.fromJson(e as Map<String, dynamic>)).toList();
-  }
-
-  Future<Team> create(Team team) async {
+  Future<List<Teammate>> fetchAll() async {
     final data = await _client
         .from('teams')
-        .insert(team.toInsertJson())
         .select()
-        .single();
-    return Team.fromJson(data);
+        .order('team_name');
+    return (data as List)
+        .map((e) => Teammate.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<Team> update(Team team) async {
+  Future<Teammate> create(Teammate teammate) async {
+    final json = teammate.toInsertJson()
+      ..['user_id'] = _client.auth.currentUser!.id;
+    final data = await _client.from('teams').insert(json).select().single();
+    return Teammate.fromJson(data);
+  }
+
+  Future<Teammate> update(Teammate teammate) async {
     final data = await _client
         .from('teams')
-        .update(team.toUpdateJson())
-        .eq('id', team.id)
+        .update(teammate.toUpdateJson())
+        .eq('id', teammate.id)
         .select()
         .single();
-    return Team.fromJson(data);
+    return Teammate.fromJson(data);
   }
 
   Future<void> delete(int id) async {

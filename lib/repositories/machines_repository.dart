@@ -10,7 +10,8 @@ class MachinesRepository {
   }
 
   Future<Machine> create(Machine machine) async {
-    final data = await _client.from('machines').insert(machine.toJson()).select().single();
+    final json = machine.toJson()..['user_id'] = _client.auth.currentUser!.id;
+    final data = await _client.from('machines').insert(json).select().single();
     return Machine.fromJson(data);
   }
 

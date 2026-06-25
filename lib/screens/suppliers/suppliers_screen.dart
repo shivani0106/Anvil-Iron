@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/validators.dart';
 import '../../cubits/suppliers/suppliers_cubit.dart';
 import '../../cubits/suppliers/suppliers_state.dart';
 import '../../models/supplier.dart';
@@ -100,13 +101,13 @@ class SuppliersScreen extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext ctx, Supplier supplier) async {
     final confirmed = await showDialog<bool>(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Delete supplier?'),
         content: Text('Remove "${supplier.name}" from your suppliers?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
@@ -246,7 +247,8 @@ class _SupplierSheetState extends State<_SupplierSheet> {
   late final TextEditingController _location;
   late final TextEditingController _address;
   late final TextEditingController _notes;
-  String? _error;
+  Map<String, String> _fieldErrors = {};
+  String? _saveError;
   bool _saving = false;
 
   @override
@@ -272,23 +274,30 @@ class _SupplierSheetState extends State<_SupplierSheet> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'Supplier name is required');
+    final errors = <String, String>{};
+
+    final nameErr = AppValidators.required(_name.text, 'Supplier name');
+    if (nameErr != null) errors['name'] = nameErr;
+
+    final mobileErr = AppValidators.phone(_mobile.text);
+    if (mobileErr != null) errors['mobile'] = mobileErr;
+
+    final emailErr = AppValidators.optionalEmail(_email.text);
+    if (emailErr != null) errors['email'] = emailErr;
+
+    if (errors.isNotEmpty) {
+      setState(() { _fieldErrors = errors; _saveError = null; });
       return;
     }
 
-    setState(() { _saving = true; _error = null; });
+    setState(() { _saving = true; _fieldErrors = {}; _saveError = null; });
 
     final cubit = context.read<SuppliersCubit>();
     bool success;
 
     if (widget.existing == null) {
-      // Use max id + 1 for integer PK suppliers table
-      final maxId = cubit.state.suppliers.isEmpty
-          ? 1
-          : cubit.state.suppliers.map((s) => s.id).reduce((a, b) => a > b ? a : b) + 1;
       final created = await cubit.create(Supplier(
-        id: maxId,
+        id: 0,
         name: _name.text.trim(),
         materials: _materials.text.trim(),
         contactPerson: _contactPerson.text.trim(),
@@ -316,7 +325,10 @@ class _SupplierSheetState extends State<_SupplierSheet> {
     if (success) {
       Navigator.pop(context);
     } else {
-      setState(() { _saving = false; _error = 'Failed to save. Please try again.'; });
+      setState(() {
+        _saving = false;
+        _saveError = 'Unable to save data. Please check your connection and try again.';
+      });
     }
   }
 
@@ -351,28 +363,34 @@ class _SupplierSheetState extends State<_SupplierSheet> {
                 ],
               ),
               const SizedBox(height: 14),
-              _field(_name, 'Supplier Name *', 'e.g. Gujarat Steel Traders'),
+              _field(_name, 'Supplier Name *', 'e.g. Gujarat Steel Traders', fieldKey: 'name'),
               const SizedBox(height: 12),
               _field(_materials, 'Materials Supplied', 'e.g. MS Flat, Angle, Channel'),
               const SizedBox(height: 12),
               _field(_contactPerson, 'Contact Person', 'e.g. Rakesh Mehta'),
               const SizedBox(height: 12),
-              _field(_mobile, 'Mobile Number', '+91 98765 43210', type: TextInputType.phone),
+              _field(_mobile, 'Mobile Number', '+91 98765 43210', fieldKey: 'mobile', type: TextInputType.phone),
               const SizedBox(height: 12),
-              _field(_email, 'Email', 'supplier@example.com', type: TextInputType.emailAddress),
+              _field(_email, 'Email', 'supplier@example.com', fieldKey: 'email', type: TextInputType.emailAddress),
               const SizedBox(height: 12),
               _field(_location, 'Location', 'e.g. Surat, Gujarat'),
               const SizedBox(height: 12),
               _field(_address, 'Full Address', 'e.g. Plot 42, GIDC Estate', maxLines: 2),
               const SizedBox(height: 12),
               _field(_notes, 'Notes', 'Optional notes', maxLines: 3),
-              if (_error != null) ...[
+              if (_saveError != null) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                       color: AppColors.errorSoft, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
-                  child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -382,8 +400,15 @@ class _SupplierSheetState extends State<_SupplierSheet> {
     );
   }
 
-  Widget _field(TextEditingController c, String label, String hint,
-      {TextInputType? type, int maxLines = 1}) {
+  Widget _field(
+    TextEditingController c,
+    String label,
+    String hint, {
+    String? fieldKey,
+    TextInputType? type,
+    int maxLines = 1,
+  }) {
+    final error = fieldKey != null ? _fieldErrors[fieldKey] : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,7 +418,14 @@ class _SupplierSheetState extends State<_SupplierSheet> {
           controller: c,
           keyboardType: type,
           maxLines: maxLines,
-          decoration: InputDecoration(hintText: hint),
+          onChanged: fieldKey != null
+              ? (_) {
+                  if (_fieldErrors.containsKey(fieldKey)) {
+                    setState(() => _fieldErrors.remove(fieldKey));
+                  }
+                }
+              : null,
+          decoration: InputDecoration(hintText: hint, errorText: error),
           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
         ),
       ],

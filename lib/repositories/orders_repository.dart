@@ -10,7 +10,8 @@ class OrdersRepository {
   }
 
   Future<Order> create(Order order) async {
-    final data = await _client.from('orders').insert(order.toJson()).select().single();
+    final json = order.toJson()..['user_id'] = _client.auth.currentUser!.id;
+    final data = await _client.from('orders').insert(json).select().single();
     return Order.fromJson(data);
   }
 

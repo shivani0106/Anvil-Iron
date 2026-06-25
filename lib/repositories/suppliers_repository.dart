@@ -10,8 +10,7 @@ class SuppliersRepository {
   }
 
   Future<Supplier> create(Supplier supplier) async {
-    final json = supplier.toInsertJson();
-    // suppliers table uses integer PK — let Supabase auto-assign or include id
+    final json = supplier.toInsertJson()..['user_id'] = _client.auth.currentUser!.id;
     final data = await _client.from('suppliers').insert(json).select().single();
     return Supplier.fromJson(data);
   }

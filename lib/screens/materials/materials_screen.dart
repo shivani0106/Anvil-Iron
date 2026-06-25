@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/validators.dart';
 import '../../cubits/materials/materials_cubit.dart';
 import '../../cubits/materials/materials_state.dart';
 import '../../models/app_material.dart';
@@ -123,15 +124,15 @@ class MaterialsScreen extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext ctx, AppMaterial material) async {
     final confirmed = await showDialog<bool>(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Delete material?'),
         content: Text('Remove "${material.name}" from your catalog?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
+              onPressed: () => Navigator.pop(dialogCtx, false),
               child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete',
                 style: TextStyle(color: AppColors.error)),
           ),
@@ -295,7 +296,8 @@ class _MaterialSheetState extends State<_MaterialSheet> {
   late final TextEditingController _supplierName;
   late final TextEditingController _cost;
   late final TextEditingController _notes;
-  String? _error;
+  Map<String, String> _fieldErrors = {};
+  String? _saveError;
   bool _saving = false;
 
   @override
@@ -328,19 +330,26 @@ class _MaterialSheetState extends State<_MaterialSheet> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'Material name is required');
+    final errors = <String, String>{};
+
+    final nameErr = AppValidators.required(_name.text, 'Material name');
+    if (nameErr != null) errors['name'] = nameErr;
+
+    final qtyErr = AppValidators.number(_quantity.text);
+    if (qtyErr != null) errors['quantity'] = qtyErr;
+
+    final costErr = AppValidators.number(_cost.text);
+    if (costErr != null) errors['cost'] = costErr;
+
+    if (errors.isNotEmpty) {
+      setState(() { _fieldErrors = errors; _saveError = null; });
       return;
     }
-    final qty = double.tryParse(_quantity.text.trim()) ?? 0;
-    final cost = _cost.text.trim().isEmpty
-        ? null
-        : double.tryParse(_cost.text.trim());
 
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
+    final qty = double.tryParse(_quantity.text.trim()) ?? 0;
+    final cost = _cost.text.trim().isEmpty ? null : double.tryParse(_cost.text.trim());
+
+    setState(() { _saving = true; _fieldErrors = {}; _saveError = null; });
 
     final cubit = context.read<MaterialsCubit>();
     bool success;
@@ -376,7 +385,7 @@ class _MaterialSheetState extends State<_MaterialSheet> {
     } else {
       setState(() {
         _saving = false;
-        _error = 'Failed to save. Please try again.';
+        _saveError = 'Unable to save data. Please check your connection and try again.';
       });
     }
   }
@@ -400,9 +409,7 @@ class _MaterialSheetState extends State<_MaterialSheet> {
               Row(
                 children: [
                   Text(
-                      widget.existing == null
-                          ? 'New Material'
-                          : 'Edit Material',
+                      widget.existing == null ? 'New Material' : 'Edit Material',
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -425,20 +432,18 @@ class _MaterialSheetState extends State<_MaterialSheet> {
                 ],
               ),
               const SizedBox(height: 14),
-              _field(_name, 'Material Name *', 'e.g. Mild Steel Rod'),
+              _field(_name, 'Material Name *', 'e.g. Mild Steel Rod', fieldKey: 'name'),
               const SizedBox(height: 12),
               Row(children: [
-                Expanded(
-                    child: _field(_type, 'Type', 'e.g. Metal, Polymer')),
+                Expanded(child: _field(_type, 'Type', 'e.g. Metal, Polymer')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _field(_quality, 'Quality', 'e.g. Grade A')),
+                Expanded(child: _field(_quality, 'Quality', 'e.g. Grade A')),
               ]),
               const SizedBox(height: 12),
               Row(children: [
                 Expanded(
                     child: _field(_quantity, 'Quantity', '0',
-                        type: TextInputType.number)),
+                        fieldKey: 'quantity', type: TextInputType.number)),
                 const SizedBox(width: 12),
                 Expanded(child: _field(_unit, 'Unit', 'kg, pcs, m')),
               ]),
@@ -446,20 +451,23 @@ class _MaterialSheetState extends State<_MaterialSheet> {
               _field(_supplierName, 'Supplier Name', 'e.g. ABC Metals'),
               const SizedBox(height: 12),
               _field(_cost, 'Cost per Unit (₹)', '0.00',
-                  type: TextInputType.number),
+                  fieldKey: 'cost', type: TextInputType.number),
               const SizedBox(height: 12),
               _field(_notes, 'Notes', 'Optional notes', maxLines: 3),
-              if (_error != null) ...[
+              if (_saveError != null) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                       color: AppColors.errorSoft,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusSm)),
-                  child: Text(_error!,
-                      style: const TextStyle(
-                          color: AppColors.error, fontSize: 13)),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -469,8 +477,15 @@ class _MaterialSheetState extends State<_MaterialSheet> {
     );
   }
 
-  Widget _field(TextEditingController c, String label, String hint,
-      {TextInputType? type, int maxLines = 1}) {
+  Widget _field(
+    TextEditingController c,
+    String label,
+    String hint, {
+    String? fieldKey,
+    TextInputType? type,
+    int maxLines = 1,
+  }) {
+    final error = fieldKey != null ? _fieldErrors[fieldKey] : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -484,7 +499,14 @@ class _MaterialSheetState extends State<_MaterialSheet> {
           controller: c,
           keyboardType: type,
           maxLines: maxLines,
-          decoration: InputDecoration(hintText: hint),
+          onChanged: fieldKey != null
+              ? (_) {
+                  if (_fieldErrors.containsKey(fieldKey)) {
+                    setState(() => _fieldErrors.remove(fieldKey));
+                  }
+                }
+              : null,
+          decoration: InputDecoration(hintText: hint, errorText: error),
           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
         ),
       ],

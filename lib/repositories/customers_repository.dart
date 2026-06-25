@@ -10,11 +10,8 @@ class CustomersRepository {
   }
 
   Future<Customer> create(Customer customer) async {
-    final data = await _client
-        .from('customers')
-        .insert(customer.toInsertJson())
-        .select()
-        .single();
+    final json = customer.toInsertJson()..['user_id'] = _client.auth.currentUser!.id;
+    final data = await _client.from('customers').insert(json).select().single();
     return Customer.fromJson(data);
   }
 

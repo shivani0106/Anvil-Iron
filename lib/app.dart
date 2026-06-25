@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'cubits/auth/auth_cubit.dart';
@@ -116,8 +117,16 @@ class _AppProviders extends StatelessWidget {
   }
 }
 
-class _AppRoot extends StatelessWidget {
+class _AppRoot extends StatefulWidget {
   const _AppRoot();
+
+  @override
+  State<_AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<_AppRoot> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  DateTime? _lastHubBackPress;
 
   Widget _screenForEntry(ScreenEntry entry) {
     switch (entry.screen) {
@@ -154,50 +163,82 @@ class _AppRoot extends StatelessWidget {
     }
   }
 
+  void _handleBackPress(NavigationCubit navCubit, NavigationState navState) {
+    // Let the child Navigator handle modals / bottom sheets first.
+    final childNav = _navigatorKey.currentState;
+    if (childNav != null && childNav.canPop()) {
+      childNav.pop();
+      return;
+    }
+
+    // Non-hub screen → navigate back within the app.
+    if (navState.current.screen != AppScreen.hub) {
+      navCubit.back();
+      return;
+    }
+
+    // Hub screen → double-back-to-exit.
+    final now = DateTime.now();
+    if (_lastHubBackPress != null &&
+        now.difference(_lastHubBackPress!) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastHubBackPress = now;
+    navCubit.showToast('Press back again to exit');
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NavigationCubit, NavigationState>(
       builder: (ctx, navState) {
-        return Stack(
-          children: [
-            Navigator(
-              pages: navState.stack.map((entry) {
-                return MaterialPage(
-                  key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}-${entry.customerId}'),
-                  child: _screenForEntry(entry),
-                );
-              }).toList(),
-              onDidRemovePage: (page) {
-                ctx.read<NavigationCubit>().back();
-              },
-            ),
-            if (navState.toast != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 100,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF23211E),
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: const [
-                        BoxShadow(color: Color(0x47000000), blurRadius: 28, offset: Offset(0, 10)),
-                      ],
-                    ),
-                    child: Text(
-                      navState.toast!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _handleBackPress(ctx.read<NavigationCubit>(), navState);
+          },
+          child: Stack(
+            children: [
+              Navigator(
+                key: _navigatorKey,
+                pages: navState.stack.map((entry) {
+                  return MaterialPage(
+                    key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}-${entry.customerId}'),
+                    child: _screenForEntry(entry),
+                  );
+                }).toList(),
+                onDidRemovePage: (page) {
+                  ctx.read<NavigationCubit>().back();
+                },
+              ),
+              if (navState.toast != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 100,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF23211E),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x47000000), blurRadius: 28, offset: Offset(0, 10)),
+                        ],
+                      ),
+                      child: Text(
+                        navState.toast!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );

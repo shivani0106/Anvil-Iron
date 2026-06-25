@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/validators.dart';
 import '../../cubits/machines/machines_cubit.dart';
 import '../../cubits/machines/machines_state.dart';
 import '../../models/machine.dart';
@@ -158,15 +159,15 @@ class MachinesScreen extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext ctx, Machine machine) async {
     final confirmed = await showDialog<bool>(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Delete machine?'),
         content: Text('Remove "${machine.name}" from your machines?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
+              onPressed: () => Navigator.pop(dialogCtx, false),
               child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete',
                 style: TextStyle(color: AppColors.error)),
           ),
@@ -395,7 +396,8 @@ class _MachineSheetState extends State<_MachineSheet> {
   late final TextEditingController _utilization;
   late final TextEditingController _note;
   late MachineStatus _status;
-  String? _error;
+  Map<String, String> _fieldErrors = {};
+  String? _saveError;
   bool _saving = false;
 
   @override
@@ -430,16 +432,22 @@ class _MachineSheetState extends State<_MachineSheet> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'Machine name is required');
+    final errors = <String, String>{};
+
+    final nameErr = AppValidators.required(_name.text, 'Machine name');
+    if (nameErr != null) errors['name'] = nameErr;
+
+    final utilErr = AppValidators.percentage(_utilization.text);
+    if (utilErr != null) errors['utilization'] = utilErr;
+
+    if (errors.isNotEmpty) {
+      setState(() { _fieldErrors = errors; _saveError = null; });
       return;
     }
+
     final utilPct = int.tryParse(_utilization.text.trim()) ?? 0;
 
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
+    setState(() { _saving = true; _fieldErrors = {}; _saveError = null; });
 
     final cubit = context.read<MachinesCubit>();
     bool success;
@@ -479,7 +487,7 @@ class _MachineSheetState extends State<_MachineSheet> {
     } else {
       setState(() {
         _saving = false;
-        _error = 'Failed to save. Please try again.';
+        _saveError = 'Unable to save data. Please check your connection and try again.';
       });
     }
   }
@@ -487,8 +495,7 @@ class _MachineSheetState extends State<_MachineSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
@@ -504,9 +511,7 @@ class _MachineSheetState extends State<_MachineSheet> {
               Row(
                 children: [
                   Text(
-                      widget.existing == null
-                          ? 'New Machine'
-                          : 'Edit Machine',
+                      widget.existing == null ? 'New Machine' : 'Edit Machine',
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -529,34 +534,24 @@ class _MachineSheetState extends State<_MachineSheet> {
                 ],
               ),
               const SizedBox(height: 14),
-              _field(_name, 'Machine Name *', 'e.g. CNC Lathe'),
+              _field(_name, 'Machine Name *', 'e.g. CNC Lathe', fieldKey: 'name'),
               const SizedBox(height: 12),
               Row(children: [
-                Expanded(
-                    child: _field(
-                        _machineNumber, 'Machine ID', 'e.g. MCH-001')),
+                Expanded(child: _field(_machineNumber, 'Machine ID', 'e.g. MCH-001')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _field(_type, 'Type', 'e.g. Lathe, Mill')),
+                Expanded(child: _field(_type, 'Type', 'e.g. Lathe, Mill')),
               ]),
               const SizedBox(height: 12),
               Row(children: [
-                Expanded(
-                    child:
-                        _field(_manufacturer, 'Manufacturer', 'e.g. Mazak')),
+                Expanded(child: _field(_manufacturer, 'Manufacturer', 'e.g. Mazak')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _field(
-                        _modelNumber, 'Model Number', 'e.g. QT-250')),
+                Expanded(child: _field(_modelNumber, 'Model Number', 'e.g. QT-250')),
               ]),
               const SizedBox(height: 12),
               Row(children: [
-                Expanded(
-                    child: _field(_capacity, 'Capacity', 'e.g. 500 kg')),
+                Expanded(child: _field(_capacity, 'Capacity', 'e.g. 500 kg')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _field(_purchaseDate, 'Purchase Date',
-                        'e.g. 2023-01-15')),
+                Expanded(child: _field(_purchaseDate, 'Purchase Date', 'e.g. 2023-01-15')),
               ]),
               const SizedBox(height: 12),
               const Text('Status',
@@ -567,38 +562,33 @@ class _MachineSheetState extends State<_MachineSheet> {
               const SizedBox(height: 6),
               SegmentedButton<MachineStatus>(
                 segments: const [
-                  ButtonSegment(
-                      value: MachineStatus.running,
-                      label: Text('Running')),
-                  ButtonSegment(
-                      value: MachineStatus.idle, label: Text('Idle')),
-                  ButtonSegment(
-                      value: MachineStatus.maintenance,
-                      label: Text('Maintenance')),
+                  ButtonSegment(value: MachineStatus.running, label: Text('Running')),
+                  ButtonSegment(value: MachineStatus.idle, label: Text('Idle')),
+                  ButtonSegment(value: MachineStatus.maintenance, label: Text('Maintenance')),
                 ],
                 selected: {_status},
-                onSelectionChanged: (s) =>
-                    setState(() => _status = s.first),
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                ),
+                onSelectionChanged: (s) => setState(() => _status = s.first),
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
               ),
               const SizedBox(height: 12),
               _field(_utilization, 'Utilization %', '0',
-                  type: TextInputType.number),
+                  fieldKey: 'utilization', type: TextInputType.number),
               const SizedBox(height: 12),
               _field(_note, 'Notes', 'Optional notes', maxLines: 3),
-              if (_error != null) ...[
+              if (_saveError != null) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                       color: AppColors.errorSoft,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusSm)),
-                  child: Text(_error!,
-                      style: const TextStyle(
-                          color: AppColors.error, fontSize: 13)),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -608,8 +598,15 @@ class _MachineSheetState extends State<_MachineSheet> {
     );
   }
 
-  Widget _field(TextEditingController c, String label, String hint,
-      {TextInputType? type, int maxLines = 1}) {
+  Widget _field(
+    TextEditingController c,
+    String label,
+    String hint, {
+    String? fieldKey,
+    TextInputType? type,
+    int maxLines = 1,
+  }) {
+    final error = fieldKey != null ? _fieldErrors[fieldKey] : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -623,9 +620,15 @@ class _MachineSheetState extends State<_MachineSheet> {
           controller: c,
           keyboardType: type,
           maxLines: maxLines,
-          decoration: InputDecoration(hintText: hint),
-          style:
-              const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          onChanged: fieldKey != null
+              ? (_) {
+                  if (_fieldErrors.containsKey(fieldKey)) {
+                    setState(() => _fieldErrors.remove(fieldKey));
+                  }
+                }
+              : null,
+          decoration: InputDecoration(hintText: hint, errorText: error),
+          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
         ),
       ],
     );
