@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 
 class SearchBarField extends StatelessWidget {
@@ -19,23 +19,23 @@ class SearchBarField extends StatelessWidget {
     return Container(
       height: 42,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: TextField(
         onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-          prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textMuted),
+          hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14),
+          prefixIcon: Icon(Icons.search, size: 18, color: context.colors.textMuted),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 11),
           isDense: true,
         ),
-        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
       ),
     );
   }

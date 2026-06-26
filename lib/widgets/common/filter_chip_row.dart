@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 
 class FilterChipRow extends StatelessWidget {
@@ -28,9 +28,9 @@ class FilterChipRow extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 7),
                 decoration: BoxDecoration(
-                  color: active ? AppColors.accent : AppColors.surface,
+                  color: active ? AppColorScheme.accent : context.colors.surface,
                   border: Border.all(
-                    color: active ? AppColors.accent : AppColors.borderLight,
+                    color: active ? AppColorScheme.accent : context.colors.borderLight,
                   ),
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 ),
@@ -39,7 +39,7 @@ class FilterChipRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                    color: active ? Colors.white : AppColors.tagText,
+                    color: active ? Colors.white : context.colors.tagText,
                   ),
                 ),
               ),

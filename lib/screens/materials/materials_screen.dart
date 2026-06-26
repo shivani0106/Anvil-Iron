@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/materials/materials_cubit.dart';
@@ -20,7 +20,7 @@ class MaterialsScreen extends StatelessWidget {
         final materials = state.filtered;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Materials',
             action: GestureDetector(
@@ -28,7 +28,7 @@ class MaterialsScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                    color: AppColors.accent, borderRadius: BorderRadius.circular(999)),
+                    color: AppColorScheme.accent, borderRadius: BorderRadius.circular(999)),
                 child: const Text('+ New',
                     style: TextStyle(
                         color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
@@ -52,38 +52,37 @@ class MaterialsScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                        color: AppColors.errorSoft,
+                        color: context.colors.errorSoft,
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                     child: Text(state.error!,
-                        style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                        style: const TextStyle(color: AppColorScheme.error, fontSize: 13)),
                   ),
                 ),
               if (state.isLoading)
                 const Expanded(
                     child: Center(
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.accent)))
+                            strokeWidth: 2, color: AppColorScheme.accent)))
               else if (materials.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.inventory_2_outlined,
-                            size: 48, color: AppColors.textMuted),
+                        Icon(Icons.inventory_2_outlined,
+                            size: 48, color: context.colors.textMuted),
                         const SizedBox(height: 12),
                         Text(
                           state.searchQuery.isEmpty
                               ? 'No materials yet'
                               : 'No results found',
-                          style: const TextStyle(
-                              fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 14, color: context.colors.textSecondary),
                         ),
                         if (state.searchQuery.isEmpty) ...[
                           const SizedBox(height: 6),
-                          const Text('Tap + New to add your first material',
-                              style:
-                                  TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                          Text('Tap + New to add your first material',
+                              style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
                         ],
                       ],
                     ),
@@ -134,7 +133,7 @@ class MaterialsScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete',
-                style: TextStyle(color: AppColors.error)),
+                style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -144,8 +143,6 @@ class MaterialsScreen extends StatelessWidget {
     }
   }
 }
-
-// ── Material Card ─────────────────────────────────────────────────────────────
 
 class _MaterialCard extends StatelessWidget {
   final AppMaterial material;
@@ -167,10 +164,10 @@ class _MaterialCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                    color: AppColors.accentSoft, shape: BoxShape.circle),
+                    color: context.colors.accentSoft, shape: BoxShape.circle),
                 child: const Center(
                   child: Icon(Icons.inventory_2_outlined,
-                      size: 20, color: AppColors.accent),
+                      size: 20, color: AppColorScheme.accent),
                 ),
               ),
               const SizedBox(width: 12),
@@ -179,39 +176,37 @@ class _MaterialCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(material.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary)),
+                            color: context.colors.textPrimary)),
                     if (material.type.isNotEmpty)
                       Text(material.type,
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                          style: TextStyle(
+                              fontSize: 12, color: context.colors.textSecondary)),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert,
-                    size: 18, color: AppColors.textMuted),
+                icon: Icon(Icons.more_vert,
+                    size: 18, color: context.colors.textMuted),
                 onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
                   PopupMenuItem(
                       value: 'delete',
                       child: Text('Delete',
-                          style: TextStyle(color: AppColors.error))),
+                          style: TextStyle(color: AppColorScheme.error))),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const Divider(height: 1, color: AppColors.divider),
+          Divider(height: 1, color: context.colors.divider),
           const SizedBox(height: 10),
           Row(
             children: [
-              _Chip(
-                  label: material.displayQty,
-                  icon: Icons.scale_outlined),
+              _Chip(label: material.displayQty, icon: Icons.scale_outlined),
               const SizedBox(width: 8),
               if (material.quality.isNotEmpty)
                 _Chip(label: material.quality, icon: Icons.verified_outlined),
@@ -220,28 +215,28 @@ class _MaterialCard extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.accent)),
+                      color: AppColorScheme.accent)),
             ],
           ),
           if (material.supplierName.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.storefront_outlined,
-                    size: 14, color: AppColors.textMuted),
+                Icon(Icons.storefront_outlined,
+                    size: 14, color: context.colors.textMuted),
                 const SizedBox(width: 5),
                 Text(material.supplierName,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary)),
+                    style: TextStyle(
+                        fontSize: 12, color: context.colors.textSecondary)),
               ],
             ),
           ],
           if (material.notes.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(material.notes,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                     fontStyle: FontStyle.italic)),
           ],
         ],
@@ -261,23 +256,21 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          color: AppColors.tagBg,
+          color: context.colors.tagBg,
           borderRadius: BorderRadius.circular(999)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.textMuted),
+          Icon(icon, size: 12, color: context.colors.textMuted),
           const SizedBox(width: 4),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
+              style: TextStyle(
+                  fontSize: 12, color: context.colors.textSecondary)),
         ],
       ),
     );
   }
 }
-
-// ── Material Form Sheet ───────────────────────────────────────────────────────
 
 class _MaterialSheet extends StatefulWidget {
   final AppMaterial? existing;
@@ -395,10 +388,10 @@ class _MaterialSheetState extends State<_MaterialSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: context.colors.surface,
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+              const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: SingleChildScrollView(
@@ -410,10 +403,10 @@ class _MaterialSheetState extends State<_MaterialSheet> {
                 children: [
                   Text(
                       widget.existing == null ? 'New Material' : 'Edit Material',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
+                          color: context.colors.textPrimary)),
                   const Spacer(),
                   TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -459,13 +452,13 @@ class _MaterialSheetState extends State<_MaterialSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColorScheme.error),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -490,10 +483,10 @@ class _MaterialSheetState extends State<_MaterialSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary)),
+                color: context.colors.textSecondary)),
         const SizedBox(height: 5),
         TextField(
           controller: c,
@@ -507,7 +500,7 @@ class _MaterialSheetState extends State<_MaterialSheet> {
                 }
               : null,
           decoration: InputDecoration(hintText: hint, errorText: error),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

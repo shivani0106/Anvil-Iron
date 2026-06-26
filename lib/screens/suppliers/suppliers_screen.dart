@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/suppliers/suppliers_cubit.dart';
@@ -21,14 +21,14 @@ class SuppliersScreen extends StatelessWidget {
         final suppliers = state.filtered;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Suppliers',
             action: GestureDetector(
               onTap: () => _showSupplierSheet(ctx, null),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: AppColorScheme.accent, borderRadius: BorderRadius.circular(999)),
                 child: const Text('+ New', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ),
@@ -44,23 +44,23 @@ class SuppliersScreen extends StatelessWidget {
                 ),
               ),
               if (state.isLoading)
-                const Expanded(child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent)))
+                const Expanded(child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColorScheme.accent)))
               else if (suppliers.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.store_outlined, size: 48, color: AppColors.textMuted),
+                        Icon(Icons.store_outlined, size: 48, color: context.colors.textMuted),
                         const SizedBox(height: 12),
                         Text(
                           state.searchQuery.isEmpty ? 'No suppliers yet' : 'No results found',
-                          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
                         ),
                         if (state.searchQuery.isEmpty) ...[
                           const SizedBox(height: 6),
-                          const Text('Tap + New to add your first supplier',
-                              style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                          Text('Tap + New to add your first supplier',
+                              style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
                         ],
                       ],
                     ),
@@ -108,7 +108,7 @@ class SuppliersScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: const Text('Delete', style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -118,8 +118,6 @@ class SuppliersScreen extends StatelessWidget {
     }
   }
 }
-
-// ── Supplier Card ─────────────────────────────────────────────────────────────
 
 class _SupplierCard extends StatelessWidget {
   final Supplier supplier;
@@ -140,8 +138,8 @@ class _SupplierCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                    color: AppColors.accentSoft, borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                child: const Icon(Icons.store_outlined, size: 20, color: AppColors.accent),
+                    color: context.colors.accentSoft, borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                child: const Icon(Icons.store_outlined, size: 20, color: AppColorScheme.accent),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -149,24 +147,24 @@ class _SupplierCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(supplier.name,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                     if (supplier.materials.isNotEmpty)
                       Text(supplier.materials,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     if (supplier.location.isNotEmpty)
                       Text(supplier.location,
-                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                          style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+                icon: Icon(Icons.more_vert, size: 18, color: context.colors.textMuted),
                 onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.error))),
+                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColorScheme.error))),
                 ],
               ),
             ],
@@ -175,18 +173,18 @@ class _SupplierCard extends StatelessWidget {
               supplier.primaryPhone.isNotEmpty ||
               supplier.email.isNotEmpty) ...[
             const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
             const SizedBox(height: 10),
             if (supplier.contactPerson.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
-                    const Icon(Icons.person_outline, size: 14, color: AppColors.textMuted),
+                    Icon(Icons.person_outline, size: 14, color: context.colors.textMuted),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(supplier.contactPerson,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                          style: TextStyle(fontSize: 13, color: context.colors.textSecondary)),
                     ),
                   ],
                 ),
@@ -194,11 +192,11 @@ class _SupplierCard extends StatelessWidget {
             if (supplier.primaryPhone.isNotEmpty)
               Row(
                 children: [
-                  const Icon(Icons.phone_outlined, size: 14, color: AppColors.textMuted),
+                  Icon(Icons.phone_outlined, size: 14, color: context.colors.textMuted),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(supplier.primaryPhone,
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        style: TextStyle(fontSize: 13, color: context.colors.textSecondary)),
                   ),
                   CallButton(number: supplier.primaryPhone, size: 32),
                 ],
@@ -207,11 +205,11 @@ class _SupplierCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.email_outlined, size: 14, color: AppColors.textMuted),
+                  Icon(Icons.email_outlined, size: 14, color: context.colors.textMuted),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(supplier.email,
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                        style: TextStyle(fontSize: 13, color: context.colors.textSecondary)),
                   ),
                 ],
               ),
@@ -219,7 +217,7 @@ class _SupplierCard extends StatelessWidget {
             if (supplier.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(supplier.notes,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontStyle: FontStyle.italic)),
+                  style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontStyle: FontStyle.italic)),
             ],
           ],
         ],
@@ -227,8 +225,6 @@ class _SupplierCard extends StatelessWidget {
     );
   }
 }
-
-// ── Supplier Form Sheet ───────────────────────────────────────────────────────
 
 class _SupplierSheet extends StatefulWidget {
   final Supplier? existing;
@@ -337,9 +333,9 @@ class _SupplierSheetState extends State<_SupplierSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: SingleChildScrollView(
@@ -350,7 +346,7 @@ class _SupplierSheetState extends State<_SupplierSheet> {
               Row(
                 children: [
                   Text(widget.existing == null ? 'New Supplier' : 'Edit Supplier',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                   const Spacer(),
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                   const SizedBox(width: 4),
@@ -383,12 +379,12 @@ class _SupplierSheetState extends State<_SupplierSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: AppColors.errorSoft, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+                      color: context.colors.errorSoft, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColorScheme.error),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -412,7 +408,7 @@ class _SupplierSheetState extends State<_SupplierSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 5),
         TextField(
           controller: c,
@@ -426,7 +422,7 @@ class _SupplierSheetState extends State<_SupplierSheet> {
                 }
               : null,
           decoration: InputDecoration(hintText: hint, errorText: error),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

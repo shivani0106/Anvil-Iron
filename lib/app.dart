@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_color_scheme.dart';
 import 'cubits/auth/auth_cubit.dart';
 import 'cubits/auth/auth_state.dart';
+import 'cubits/theme/theme_cubit.dart';
 import 'cubits/navigation/navigation_cubit.dart';
 import 'cubits/navigation/navigation_state.dart';
 import 'cubits/orders/orders_cubit.dart';
@@ -24,26 +26,52 @@ import 'screens/inventory/inventory_screen.dart';
 import 'screens/inventory/stock_log_screen.dart';
 import 'screens/suppliers/suppliers_screen.dart';
 import 'screens/invoices/invoices_screen.dart';
+import 'cubits/drawings/drawings_cubit.dart';
 import 'screens/drawings/drawings_screen.dart';
+import 'screens/drawings/drawing_viewer_screen.dart';
 import 'screens/machines/machines_screen.dart';
 import 'screens/reports/reports_screen.dart';
 import 'screens/team/team_screen.dart';
 import 'screens/agent/agent_chat_screen.dart';
 import 'screens/customers/customers_screen.dart';
 import 'screens/materials/materials_screen.dart';
+import 'widgets/common/screen_app_bar.dart';
 
 class IronWorksApp extends StatelessWidget {
   const IronWorksApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => AuthCubit(),
-      child: MaterialApp(
-        title: 'Anvil',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.theme,
-        home: const _AuthGate(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ThemeCubit()),
+        BlocProvider(create: (_) => AuthCubit()),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (ctx, themeMode) {
+          final isDark = themeMode == ThemeMode.dark;
+          SystemChrome.setSystemUIOverlayStyle(
+            isDark
+                ? SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: AppColorScheme.dark.surface,
+                    systemNavigationBarIconBrightness: Brightness.light,
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: AppColorScheme.light.surface,
+                    systemNavigationBarIconBrightness: Brightness.dark,
+                  ),
+          );
+          return MaterialApp(
+            title: 'Anvil',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.theme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            home: const _AuthGate(),
+          );
+        },
       ),
     );
   }
@@ -103,6 +131,7 @@ class _AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => MachinesCubit()),
         BlocProvider(create: (_) => MaterialsCubit()),
         BlocProvider(create: (_) => TeamsMgmtCubit()),
+        BlocProvider(create: (_) => DrawingsCubit()),
         BlocProvider(
           create: (ctx) => AgentCubit(
             navigationCubit: ctx.read<NavigationCubit>(),
@@ -148,6 +177,15 @@ class _AppRootState extends State<_AppRoot> {
         return const InvoicesScreen();
       case AppScreen.drawings:
         return const DrawingsScreen();
+      case AppScreen.drawingViewer:
+        final drawing = context.read<DrawingsCubit>().getById(entry.drawingId ?? '');
+        if (drawing == null) {
+          return Scaffold(
+            appBar: const ScreenAppBar(title: 'Drawing'),
+            body: const Center(child: Text('Drawing not found')),
+          );
+        }
+        return DrawingViewerScreen(drawing: drawing);
       case AppScreen.machines:
         return const MachinesScreen();
       case AppScreen.reports:
@@ -203,7 +241,7 @@ class _AppRootState extends State<_AppRoot> {
                 key: _navigatorKey,
                 pages: navState.stack.map((entry) {
                   return MaterialPage(
-                    key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}-${entry.customerId}'),
+                    key: ValueKey('${entry.screen.name}-${entry.orderId}-${entry.materialId}-${entry.customerId}-${entry.drawingId}'),
                     child: _screenForEntry(entry),
                   );
                 }).toList(),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../cubits/agent/agent_cubit.dart';
 import '../../cubits/agent/agent_state.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
@@ -38,15 +38,15 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.colors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: context.colors.textPrimary),
           onPressed: () => context.read<NavigationCubit>().back(),
         ),
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -54,14 +54,14 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             Text(
               'Your business assistant',
               style: TextStyle(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -69,14 +69,14 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.textSecondary),
+            icon: Icon(Icons.delete_outline_rounded, size: 20, color: context.colors.textSecondary),
             onPressed: () => context.read<AgentCubit>().clearChat(),
             tooltip: 'Clear chat',
           ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: AppColors.border),
+          child: Container(height: 1, color: context.colors.border),
         ),
       ),
       body: BlocConsumer<AgentCubit, AgentState>(
@@ -101,18 +101,18 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withAlpha(26),
+                    color: AppColorScheme.error.withAlpha(26),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.error.withAlpha(77)),
+                    border: Border.all(color: AppColorScheme.error.withAlpha(77)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, size: 16, color: AppColors.error),
+                      const Icon(Icons.error_outline_rounded, size: 16, color: AppColorScheme.error),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           state.error!,
-                          style: const TextStyle(fontSize: 13, color: AppColors.error),
+                          style: const TextStyle(fontSize: 13, color: AppColorScheme.error),
                         ),
                       ),
                     ],
@@ -140,25 +140,25 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.accent.withAlpha(26),
+                color: AppColorScheme.accent.withAlpha(26),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.auto_awesome_rounded, size: 32, color: AppColors.accent),
+              child: const Icon(Icons.auto_awesome_rounded, size: 32, color: AppColorScheme.accent),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Anvil AI',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Ask me anything about your orders, inventory, or invoices. I can also navigate the app for you.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+              style: TextStyle(fontSize: 14, color: context.colors.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 24),
             _buildSuggestionChips(),
@@ -185,15 +185,15 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.colors.border),
           ),
           child: Text(
             s,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),

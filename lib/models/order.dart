@@ -27,6 +27,7 @@ class Order extends Equatable {
   final WorkType workType;
   final int? customerId;
   final int? supplierId;
+  final int currentStep; // -1 = not started, 0..N-1 = active workflow step index
 
   const Order({
     required this.id,
@@ -43,6 +44,7 @@ class Order extends Equatable {
     this.workType = WorkType.inHouse,
     this.customerId,
     this.supplierId,
+    this.currentStep = -1,
   });
 
   static const List<String> stageLabels = ['Queued', 'Cutting', 'Welding', 'QC', 'Ready'];
@@ -73,6 +75,7 @@ class Order extends Equatable {
         workType: WorkTypeX.fromValue(json['work_type'] as String?),
         customerId: json['customer_id'] as int?,
         supplierId: json['supplier_id'] as int?,
+        currentStep: (json['current_step'] as int?) ?? -1,
       );
 
   Map<String, dynamic> toJson() => {
@@ -90,6 +93,7 @@ class Order extends Equatable {
         'work_type': workType.value,
         'customer_id': customerId,
         'supplier_id': supplierId,
+        'current_step': currentStep,
       };
 
   Order copyWith({
@@ -107,6 +111,7 @@ class Order extends Equatable {
     WorkType? workType,
     int? customerId,
     int? supplierId,
+    int? currentStep,
   }) {
     return Order(
       id: id ?? this.id,
@@ -123,12 +128,13 @@ class Order extends Equatable {
       workType: workType ?? this.workType,
       customerId: customerId ?? this.customerId,
       supplierId: supplierId ?? this.supplierId,
+      currentStep: currentStep ?? this.currentStep,
     );
   }
 
   @override
   List<Object?> get props => [
         id, customer, item, spec, qty, material, due, ordered,
-        stage, delivered, drawing, workType, customerId, supplierId,
+        stage, delivered, drawing, workType, customerId, supplierId, currentStep,
       ];
 }

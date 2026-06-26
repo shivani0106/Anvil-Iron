@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/auth/auth_cubit.dart';
@@ -53,7 +53,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           s is AppAuthConfirmationRequired,
       listener: (ctx, state) {
         if (state is AppAuthAuthenticated) {
-          // Account created and session is live — go straight to main app.
           if (context.mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
@@ -77,7 +76,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       builder: (ctx, state) {
         final isLoading = state is AppAuthLoading;
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 26),
@@ -89,8 +88,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     icon: Icon(Icons.arrow_back_ios_new_rounded,
                         size: 18,
                         color: isLoading
-                            ? AppColors.textMuted
-                            : AppColors.textPrimary),
+                            ? context.colors.textMuted
+                            : context.colors.textPrimary),
                     padding: EdgeInsets.zero,
                     onPressed:
                         isLoading ? null : () => Navigator.of(context).pop(),
@@ -147,7 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               size: 20,
-                              color: AppColors.textMuted,
+                              color: context.colors.textMuted,
                             ),
                             onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword),
@@ -168,7 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               size: 20,
-                              color: AppColors.textMuted,
+                              color: context.colors.textMuted,
                             ),
                             onPressed: () => setState(
                                 () => _obscureConfirm = !_obscureConfirm),
@@ -214,7 +213,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         SnackBar(
           content: Text(message),
           backgroundColor:
-              isError ? AppColors.error : const Color(0xFF2E7D32),
+              isError ? AppColorScheme.error : const Color(0xFF2E7D32),
           duration: Duration(seconds: isError ? 4 : 7),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

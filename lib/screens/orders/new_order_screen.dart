@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/navigation/navigation_state.dart';
@@ -23,7 +23,7 @@ class NewOrderScreen extends StatelessWidget {
         final materials = ctx.read<InventoryCubit>().state.items.map((m) => m.name).toList();
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: const ScreenAppBar(title: 'New Job Order'),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(18),
@@ -31,6 +31,7 @@ class NewOrderScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildField(
+                  context: context,
                   label: 'Customer',
                   hint: 'e.g. Patel Engineering',
                   value: state.formCustomer,
@@ -38,6 +39,7 @@ class NewOrderScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _buildField(
+                  context: context,
                   label: 'Item',
                   hint: 'e.g. MS Angle Bracket',
                   value: state.formItem,
@@ -45,6 +47,7 @@ class NewOrderScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _buildField(
+                  context: context,
                   label: 'Quantity',
                   hint: 'e.g. 100',
                   value: state.formQty,
@@ -53,6 +56,7 @@ class NewOrderScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _buildDropdownField(
+                  context: context,
                   label: 'Material',
                   hint: 'Select material',
                   value: state.formMaterial.isEmpty ? null : state.formMaterial,
@@ -67,6 +71,7 @@ class NewOrderScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _buildWorkTypeField(
+                  context: context,
                   value: state.formWorkType,
                   onChanged: (v) => ordersCubit.updateForm(workType: v),
                 ),
@@ -83,18 +88,18 @@ class NewOrderScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                      border: Border.all(color: AppColorScheme.error.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, size: 16, color: AppColors.error),
+                        const Icon(Icons.error_outline, size: 16, color: AppColorScheme.error),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             state.formError,
-                            style: const TextStyle(color: AppColors.error, fontSize: 13),
+                            style: const TextStyle(color: AppColorScheme.error, fontSize: 13),
                           ),
                         ),
                       ],
@@ -127,6 +132,7 @@ class NewOrderScreen extends StatelessWidget {
   }
 
   Widget _buildField({
+    required BuildContext context,
     required String label,
     required String hint,
     required String value,
@@ -136,14 +142,14 @@ class NewOrderScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 6),
         TextFormField(
           initialValue: value,
           onChanged: onChanged,
           keyboardType: keyboardType,
           decoration: InputDecoration(hintText: hint),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );
@@ -157,9 +163,9 @@ class NewOrderScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Due date',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary),
         ),
         const SizedBox(height: 6),
         GestureDetector(
@@ -173,20 +179,18 @@ class NewOrderScreen extends StatelessWidget {
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: AppColors.accent,
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: AppColorScheme.accent,
+                      brightness: Theme.of(context).brightness,
+                    ).copyWith(
+                      primary: AppColorScheme.accent,
                       onPrimary: Colors.white,
-                      surface: AppColors.surface,
-                      onSurface: AppColors.textPrimary,
-                      onSurfaceVariant: AppColors.textSecondary,
-                      outline: AppColors.border,
                     ),
                     textButtonTheme: TextButtonThemeData(
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.accent,
+                        foregroundColor: AppColorScheme.accent,
                       ),
                     ),
-                    dividerColor: AppColors.divider,
                   ),
                   child: child!,
                 );
@@ -199,9 +203,9 @@ class NewOrderScreen extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
             child: Row(
               children: [
@@ -210,11 +214,11 @@ class NewOrderScreen extends StatelessWidget {
                     value.isEmpty ? 'Select due date' : value,
                     style: TextStyle(
                       fontSize: 14,
-                      color: value.isEmpty ? AppColors.textMuted : AppColors.textPrimary,
+                      color: value.isEmpty ? context.colors.textMuted : context.colors.textPrimary,
                     ),
                   ),
                 ),
-                const Icon(Icons.calendar_today_outlined, size: 16, color: AppColors.textSecondary),
+                Icon(Icons.calendar_today_outlined, size: 16, color: context.colors.textSecondary),
               ],
             ),
           ),
@@ -224,6 +228,7 @@ class NewOrderScreen extends StatelessWidget {
   }
 
   Widget _buildDropdownField({
+    required BuildContext context,
     required String label,
     required String hint,
     required String? value,
@@ -233,18 +238,18 @@ class NewOrderScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.colors.border),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: DropdownButton<String>(
             value: value,
-            hint: Text(hint, style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
+            hint: Text(hint, style: TextStyle(color: context.colors.textMuted, fontSize: 14)),
             isExpanded: true,
             underline: const SizedBox.shrink(),
             items: options.map((o) => DropdownMenuItem(value: o, child: Text(o, style: const TextStyle(fontSize: 14)))).toList(),
@@ -256,13 +261,14 @@ class NewOrderScreen extends StatelessWidget {
   }
 
   Widget _buildWorkTypeField({
+    required BuildContext context,
     required WorkType value,
     required ValueChanged<WorkType> onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Work Type *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text('Work Type *', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 6),
         Row(
           children: WorkType.values.map((wt) {
@@ -275,10 +281,10 @@ class NewOrderScreen extends StatelessWidget {
                   margin: EdgeInsets.only(right: wt == WorkType.inHouse ? 8 : 0),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.accent : AppColors.surface,
+                    color: selected ? AppColorScheme.accent : context.colors.surface,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                      color: selected ? AppColors.accent : AppColors.border,
+                      color: selected ? AppColorScheme.accent : context.colors.border,
                       width: selected ? 1.5 : 1,
                     ),
                   ),
@@ -288,7 +294,7 @@ class NewOrderScreen extends StatelessWidget {
                       Icon(
                         wt == WorkType.inHouse ? Icons.factory_outlined : Icons.local_shipping_outlined,
                         size: 16,
-                        color: selected ? Colors.white : AppColors.textSecondary,
+                        color: selected ? Colors.white : context.colors.textSecondary,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -296,7 +302,7 @@ class NewOrderScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: selected ? Colors.white : AppColors.textSecondary,
+                          color: selected ? Colors.white : context.colors.textSecondary,
                         ),
                       ),
                     ],
@@ -356,13 +362,13 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
       children: [
         Row(
           children: [
-            const Text(
+            Text(
               'Production workflow',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textSecondary),
             ),
             const Spacer(),
             if (steps.isNotEmpty)
-              const Text('▲▼ to reorder', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+              Text('▲▼ to reorder', style: TextStyle(fontSize: 11, color: context.colors.textMuted)),
           ],
         ),
         const SizedBox(height: 8),
@@ -373,9 +379,9 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
             margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
             child: Row(
               children: [
@@ -383,7 +389,7 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: AppColors.accent,
+                    color: AppColorScheme.accent,
                     borderRadius: BorderRadius.circular(7),
                   ),
                   child: Center(
@@ -395,7 +401,7 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(name, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+                  child: Text(name, style: TextStyle(fontSize: 14, color: context.colors.textPrimary)),
                 ),
                 _ReorderBtn(
                   icon: Icons.arrow_drop_up,
@@ -414,10 +420,10 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
                     width: 26,
                     height: 26,
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
+                      color: AppColorScheme.error.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(Icons.close, size: 14, color: AppColors.error),
+                    child: const Icon(Icons.close, size: 14, color: AppColorScheme.error),
                   ),
                 ),
               ],
@@ -432,7 +438,7 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
                 controller: _controller,
                 onSubmitted: (_) => _add(),
                 decoration: const InputDecoration(hintText: 'Add a step...'),
-                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
               ),
             ),
             const SizedBox(width: 8),
@@ -441,12 +447,12 @@ class _FormWorkflowSectionState extends State<_FormWorkflowSection> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.accentSoft,
+                  color: context.colors.accentSoft,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
                 child: const Text(
                   '+ Add',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColorScheme.accent),
                 ),
               ),
             ),
@@ -473,10 +479,10 @@ class _ReorderBtn extends StatelessWidget {
         height: 28,
         margin: const EdgeInsets.only(left: 4),
         decoration: BoxDecoration(
-          color: enabled ? AppColors.tagBg : Colors.transparent,
+          color: enabled ? context.colors.tagBg : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Icon(icon, size: 20, color: enabled ? AppColors.textSecondary : AppColors.borderLight),
+        child: Icon(icon, size: 20, color: enabled ? context.colors.textSecondary : context.colors.borderLight),
       ),
     );
   }

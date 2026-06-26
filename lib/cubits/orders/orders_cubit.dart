@@ -164,6 +164,35 @@ class OrdersCubit extends Cubit<OrdersState> {
     return created.id;
   }
 
+  Future<void> advanceWorkflowStep(int orderId, int totalSteps) async {
+    final order = getOrderById(orderId);
+    if (order == null || order.delivered) return;
+
+    final nextStep = order.currentStep + 1;
+    if (nextStep >= totalSteps) return;
+
+    await _repo.updateCurrentStep(orderId, nextStep);
+
+    final updated = state.orders.map((o) {
+      if (o.id != orderId) return o;
+      return o.copyWith(currentStep: nextStep);
+    }).toList();
+    emit(state.copyWith(orders: updated));
+  }
+
+  Future<void> markAsDelivered(int orderId) async {
+    final order = getOrderById(orderId);
+    if (order == null || order.delivered) return;
+
+    await _repo.markAsDelivered(orderId);
+
+    final updated = state.orders.map((o) {
+      if (o.id != orderId) return o;
+      return o.copyWith(delivered: true, stage: OrderStage.ready);
+    }).toList();
+    emit(state.copyWith(orders: updated));
+  }
+
   Future<void> advanceStage(int orderId) async {
     final order = state.orders.firstWhere((o) => o.id == orderId);
     if (order.delivered) return;

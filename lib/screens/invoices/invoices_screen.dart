@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/invoices/invoices_cubit.dart';
 import '../../cubits/invoices/invoices_state.dart';
@@ -27,7 +27,7 @@ class InvoicesScreen extends StatelessWidget {
         final nav = ctx.read<NavigationCubit>();
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Invoices & Quotes',
             action: GestureDetector(
@@ -36,7 +36,7 @@ class InvoicesScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: AppColorScheme.accent,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -59,8 +59,8 @@ class InvoicesScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Expanded(
                 child: state.activeTab == InvoiceTab.invoices
-                    ? _buildInvoicesList(state.invoices, nav)
-                    : _buildQuotesList(state.quotes, nav),
+                    ? _buildInvoicesList(context, state.invoices, nav)
+                    : _buildQuotesList(context, state.quotes, nav),
               ),
             ],
           ),
@@ -69,7 +69,7 @@ class InvoicesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInvoicesList(List<Invoice> invoices, NavigationCubit nav) {
+  Widget _buildInvoicesList(BuildContext context, List<Invoice> invoices, NavigationCubit nav) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
       itemCount: invoices.length,
@@ -86,15 +86,15 @@ class InvoicesScreen extends StatelessWidget {
                   children: [
                     Text(
                       inv.id,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontWeight: FontWeight.w600),
                     ),
                     Text(
                       inv.customer,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
                     ),
                     Text(
                       inv.date,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                     ),
                   ],
                 ),
@@ -104,7 +104,7 @@ class InvoicesScreen extends StatelessWidget {
                 children: [
                   Text(
                     _inr(inv.amount),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   StatusChip(label: inv.statusLabel, color: color, small: true),
@@ -117,7 +117,7 @@ class InvoicesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuotesList(List<Quote> quotes, NavigationCubit nav) {
+  Widget _buildQuotesList(BuildContext context, List<Quote> quotes, NavigationCubit nav) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
       itemCount: quotes.length,
@@ -125,10 +125,10 @@ class InvoicesScreen extends StatelessWidget {
       itemBuilder: (context, i) {
         final q = quotes[i];
         final color = q.status == QuoteStatus.won
-            ? AppColors.statusReady
+            ? AppColorScheme.statusReady
             : q.status == QuoteStatus.lost
-                ? AppColors.error
-                : AppColors.textSecondary;
+                ? AppColorScheme.error
+                : context.colors.textSecondary;
         return InfoCard(
           child: Row(
             children: [
@@ -138,15 +138,15 @@ class InvoicesScreen extends StatelessWidget {
                   children: [
                     Text(
                       q.id,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontWeight: FontWeight.w600),
                     ),
                     Text(
                       q.customer,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
                     ),
                     Text(
                       q.date,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                     ),
                   ],
                 ),
@@ -156,7 +156,7 @@ class InvoicesScreen extends StatelessWidget {
                 children: [
                   Text(
                     _inr(q.amount),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   StatusChip(label: q.statusLabel, color: color, small: true),

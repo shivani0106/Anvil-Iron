@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/job_details/job_details_cubit.dart';
 import '../../cubits/job_details/job_details_state.dart';
@@ -50,11 +50,21 @@ class _OrderDetailView extends StatelessWidget {
       builder: (ctx, jobState) {
         final stageColor = StatusChip.colorForOrderStage(order.stage, order.delivered);
 
+        final steps = jobState.workflowSteps;
+        final hasSteps = steps.isNotEmpty && !jobState.isLoading;
+
         String advLabel;
         bool advDisabled = false;
         if (order.delivered) {
           advLabel = '✓ Delivered';
           advDisabled = true;
+        } else if (hasSteps) {
+          if (order.currentStep >= 0 && order.currentStep >= steps.length - 1) {
+            advLabel = 'Mark as Delivered';
+          } else {
+            final nextIdx = order.currentStep + 1;
+            advLabel = 'Update Process → ${steps[nextIdx].name}';
+          }
         } else if (order.stage == OrderStage.ready) {
           advLabel = 'Mark as Delivered';
         } else {
@@ -62,7 +72,7 @@ class _OrderDetailView extends StatelessWidget {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(title: '#${order.id} · ${order.customer}'),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(18),
@@ -73,7 +83,7 @@ class _OrderDetailView extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(order.item,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: -0.02)),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary, letterSpacing: -0.02)),
                     ),
                     StatusChip(label: order.stageLabel, color: stageColor),
                   ],
@@ -81,11 +91,11 @@ class _OrderDetailView extends StatelessWidget {
                 const SizedBox(height: 6),
                 _WorkTypeBadge(workType: order.workType),
                 const SizedBox(height: 16),
-                _buildDetailsGrid(order),
+                _buildDetailsGrid(context, order),
                 const SizedBox(height: 20),
-                const Text('Production Stages', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text('Production Stages', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                 const SizedBox(height: 14),
-                _buildProductionStages(jobState),
+                _buildProductionStages(context, order, jobState),
                 const SizedBox(height: 24),
                 if (!advDisabled)
                   SizedBox(
@@ -94,12 +104,29 @@ class _OrderDetailView extends StatelessWidget {
                       onPressed: () async {
                         final ordersCubit = ctx.read<OrdersCubit>();
                         final navCubit = ctx.read<NavigationCubit>();
-                        await ordersCubit.advanceStage(order.id);
-                        final updated = ordersCubit.getOrderById(order.id);
-                        if (updated != null && updated.delivered) {
-                          navCubit.showToast('Order #${order.id} delivered ✓');
-                        } else if (updated != null) {
-                          navCubit.showToast('Moved to ${updated.stageLabel}');
+                        try {
+                          if (hasSteps) {
+                            if (order.currentStep >= 0 && order.currentStep >= steps.length - 1) {
+                              await ordersCubit.markAsDelivered(order.id);
+                              navCubit.showToast('Order #${order.id} delivered ✓');
+                            } else {
+                              await ordersCubit.advanceWorkflowStep(order.id, steps.length);
+                              final updated = ordersCubit.getOrderById(order.id);
+                              if (updated != null && updated.currentStep < steps.length) {
+                                navCubit.showToast('Started: ${steps[updated.currentStep].name}');
+                              }
+                            }
+                          } else {
+                            await ordersCubit.advanceStage(order.id);
+                            final updated = ordersCubit.getOrderById(order.id);
+                            if (updated != null && updated.delivered) {
+                              navCubit.showToast('Order #${order.id} delivered ✓');
+                            } else if (updated != null) {
+                              navCubit.showToast('Moved to ${updated.stageLabel}');
+                            }
+                          }
+                        } catch (_) {
+                          navCubit.showToast('Update failed. Please try again.');
                         }
                       },
                       child: Text(advLabel),
@@ -110,23 +137,22 @@ class _OrderDetailView extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     decoration: BoxDecoration(
-                      color: AppColors.statusDelivered.withValues(alpha: 0.15),
+                      color: AppColorScheme.statusDelivered.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
                     child: const Center(
                       child: Text('✓ Delivered',
-                          style: TextStyle(color: AppColors.statusDelivered, fontSize: 16, fontWeight: FontWeight.w600)),
+                          style: TextStyle(color: AppColorScheme.statusDelivered, fontSize: 16, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 const SizedBox(height: 28),
-                // ── Materials ──────────────────────────────────────────
                 _SectionHeader(
                   title: 'Materials',
                   onAdd: () => _showMaterialSheet(ctx, null),
                 ),
                 const SizedBox(height: 10),
                 if (jobState.isLoading)
-                  const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                  const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColorScheme.accent))
                 else if (jobState.materials.isEmpty)
                   _EmptySection(label: 'No materials added yet')
                 else
@@ -136,7 +162,6 @@ class _OrderDetailView extends StatelessWidget {
                         onDelete: () => _confirmDelete(ctx, 'material', () => ctx.read<JobDetailsCubit>().deleteMaterial(m.id)),
                       )),
                 const SizedBox(height: 24),
-                // ── Teams ──────────────────────────────────────────────
                 _SectionHeader(
                   title: 'Teams',
                   onAdd: () => _showTeamSheet(ctx, null),
@@ -151,7 +176,6 @@ class _OrderDetailView extends StatelessWidget {
                         onDelete: () => _confirmDelete(ctx, 'team', () => ctx.read<JobDetailsCubit>().deleteTeam(t.id)),
                       )),
                 const SizedBox(height: 24),
-                // ── Linked Customer ────────────────────────────────────
                 _SectionHeader(
                   title: 'Customer Contact',
                   onAdd: jobState.linkedCustomer == null
@@ -172,7 +196,6 @@ class _OrderDetailView extends StatelessWidget {
                 else
                   _EmptySection(label: 'No customer linked'),
                 const SizedBox(height: 24),
-                // ── Linked Supplier ────────────────────────────────────
                 _SectionHeader(
                   title: 'Supplier',
                   onAdd: jobState.linkedSupplier == null
@@ -199,8 +222,6 @@ class _OrderDetailView extends StatelessWidget {
       },
     );
   }
-
-  // ── Sheets ─────────────────────────────────────────────────────────────────
 
   void _showMaterialSheet(BuildContext ctx, JobMaterial? existing) {
     showModalBottomSheet(
@@ -284,7 +305,7 @@ class _OrderDetailView extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: const Text('Delete', style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -292,9 +313,7 @@ class _OrderDetailView extends StatelessWidget {
     if (confirmed == true && ctx.mounted) onConfirm();
   }
 
-  // ── Detail widgets ─────────────────────────────────────────────────────────
-
-  Widget _buildDetailsGrid(Order order) {
+  Widget _buildDetailsGrid(BuildContext context, Order order) {
     final details = [
       ['Customer', order.customer],
       ['Work Type', order.workType.label],
@@ -307,9 +326,9 @@ class _OrderDetailView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         children: details.asMap().entries.map((e) {
@@ -322,17 +341,17 @@ class _OrderDetailView extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 90,
-                      child: Text(e.value[0], style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                      child: Text(e.value[0], style: TextStyle(fontSize: 13, color: context.colors.textSecondary)),
                     ),
                     Expanded(
                       child: Text(e.value[1],
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
                           textAlign: TextAlign.right),
                     ),
                   ],
                 ),
               ),
-              if (!isLast) const Divider(height: 1, color: AppColors.divider),
+              if (!isLast) Divider(height: 1, color: context.colors.divider),
             ],
           );
         }).toList(),
@@ -340,9 +359,9 @@ class _OrderDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildProductionStages(JobDetailsState jobState) {
+  Widget _buildProductionStages(BuildContext context, Order order, JobDetailsState jobState) {
     if (jobState.isLoading) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent));
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColorScheme.accent));
     }
     final steps = jobState.workflowSteps;
     if (steps.isEmpty) {
@@ -353,14 +372,39 @@ class _OrderDetailView extends StatelessWidget {
         final i = entry.key;
         final step = entry.value;
         final isLast = i == steps.length - 1;
+
+        final isCompleted = order.currentStep >= 0 && i < order.currentStep;
+        final isCurrent = i == order.currentStep;
+
+        final Color badgeColor = isCompleted
+            ? AppColorScheme.statusReady
+            : isCurrent
+                ? AppColorScheme.accent
+                : context.colors.borderLight;
+
+        final Widget badgeChild = isCompleted
+            ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+            : Text(
+                '${i + 1}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: isCurrent ? Colors.white : context.colors.textMuted,
+                ),
+              );
+
+        final Color containerBorderColor = isCurrent ? AppColorScheme.accent : context.colors.border;
+        final Color textColor = isCompleted || isCurrent ? context.colors.textPrimary : context.colors.textMuted;
+        final Color connectorColor = isCompleted ? AppColorScheme.statusReady : context.colors.borderLight;
+
         return Column(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isCurrent ? context.colors.accentSoft : context.colors.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: containerBorderColor, width: isCurrent ? 1.5 : 1),
               ),
               child: Row(
                 children: [
@@ -368,21 +412,39 @@ class _OrderDetailView extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: AppColors.accent,
+                      color: badgeColor,
                       borderRadius: BorderRadius.circular(7),
                     ),
-                    child: Center(
-                      child: Text(
-                        '${i + 1}',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-                      ),
-                    ),
+                    child: Center(child: badgeChild),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(step.name,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+                    child: Text(
+                      step.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
                   ),
+                  if (isCompleted)
+                    const Text(
+                      'Done',
+                      style: TextStyle(fontSize: 11, color: AppColorScheme.statusReady, fontWeight: FontWeight.w600),
+                    )
+                  else if (isCurrent)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColorScheme.accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                      ),
+                      child: const Text(
+                        'In Progress',
+                        style: TextStyle(fontSize: 11, color: AppColorScheme.accent, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -390,8 +452,8 @@ class _OrderDetailView extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 26),
-                  child: Container(width: 2, height: 8, color: AppColors.borderLight),
+                  padding: const EdgeInsets.only(left: 25),
+                  child: Container(width: 2, height: 10, color: connectorColor),
                 ),
               ),
           ],
@@ -413,18 +475,18 @@ class _WorkTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isInHouse ? AppColors.accentSoft : AppColors.tagBg,
+        color: isInHouse ? context.colors.accentSoft : context.colors.tagBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(isInHouse ? Icons.factory_outlined : Icons.local_shipping_outlined,
-              size: 12, color: isInHouse ? AppColors.accent : AppColors.tagText),
+              size: 12, color: isInHouse ? AppColorScheme.accent : context.colors.tagText),
           const SizedBox(width: 5),
           Text(workType.label,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                  color: isInHouse ? AppColors.accent : AppColors.tagText)),
+                  color: isInHouse ? AppColorScheme.accent : context.colors.tagText)),
         ],
       ),
     );
@@ -440,7 +502,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
         const Spacer(),
         if (onAdd != null)
           GestureDetector(
@@ -448,7 +510,7 @@ class _SectionHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.accent,
+                color: AppColorScheme.accent,
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: const Text('+ Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
@@ -469,11 +531,11 @@ class _EmptySection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
-      child: Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+      child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: context.colors.textMuted)),
     );
   }
 }
@@ -492,28 +554,28 @@ class _MaterialCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: AppColors.tagBg, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
-            child: const Icon(Icons.inventory_2_outlined, size: 18, color: AppColors.textSecondary),
+            decoration: BoxDecoration(color: context.colors.tagBg, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+            child: Icon(Icons.inventory_2_outlined, size: 18, color: context.colors.textSecondary),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(material.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                Text(material.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                 if (material.type.isNotEmpty || material.quality.isNotEmpty)
                   Text(
                     [if (material.type.isNotEmpty) material.type, if (material.quality.isNotEmpty) material.quality].join(' · '),
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                   ),
               ],
             ),
@@ -539,28 +601,28 @@ class _TeamCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: AppColors.accentSoft, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
-            child: const Icon(Icons.group_outlined, size: 18, color: AppColors.accent),
+            decoration: BoxDecoration(color: context.colors.accentSoft, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+            child: const Icon(Icons.group_outlined, size: 18, color: AppColorScheme.accent),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(team.teamName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                Text(team.teamName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                 if (team.leader.isNotEmpty)
-                  Text('Leader: ${team.leader}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text('Leader: ${team.leader}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                 Text('${team.membersCount} member${team.membersCount != 1 ? 's' : ''}',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                    style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
               ],
             ),
           ),
@@ -601,9 +663,9 @@ class _ContactCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,15 +676,15 @@ class _ContactCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    Text(name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                     if (subtitle.isNotEmpty)
-                      Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text(subtitle, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                   ],
                 ),
               ),
               GestureDetector(
                 onTap: onUnlink,
-                child: const Icon(Icons.link_off, size: 18, color: AppColors.textMuted),
+                child: Icon(Icons.link_off, size: 18, color: context.colors.textMuted),
               ),
             ],
           ),
@@ -638,15 +700,15 @@ class _ContactCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.email_outlined, size: 14, color: AppColors.textMuted),
+                Icon(Icons.email_outlined, size: 14, color: context.colors.textMuted),
                 const SizedBox(width: 6),
-                Expanded(child: Text(email, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
+                Expanded(child: Text(email, style: TextStyle(fontSize: 12, color: context.colors.textSecondary))),
               ],
             ),
           ],
           if (notes.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(notes, style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontStyle: FontStyle.italic)),
+            Text(notes, style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontStyle: FontStyle.italic)),
           ],
         ],
       ),
@@ -663,10 +725,10 @@ class _PhoneRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.phone_outlined, size: 14, color: AppColors.textMuted),
+        Icon(Icons.phone_outlined, size: 14, color: context.colors.textMuted),
         const SizedBox(width: 6),
-        Text('$label: ', style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
-        Expanded(child: Text(number, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
+        Text('$label: ', style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
+        Expanded(child: Text(number, style: TextStyle(fontSize: 12, color: context.colors.textSecondary))),
         CallButton(number: number, size: 30),
       ],
     );
@@ -681,11 +743,11 @@ class _ActionMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+      icon: Icon(Icons.more_vert, size: 18, color: context.colors.textMuted),
       onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
       itemBuilder: (_) => const [
         PopupMenuItem(value: 'edit', child: Text('Edit')),
-        PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.error))),
+        PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColorScheme.error))),
       ],
     );
   }
@@ -754,7 +816,7 @@ class _MaterialSheetState extends State<_MaterialSheet> {
           _SheetField(controller: _quality, label: 'Material Quality', hint: 'e.g. IS 2062 Grade A'),
           if (_error != null) ...[
             const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+            Text(_error!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13)),
           ],
         ],
       ),
@@ -832,7 +894,7 @@ class _TeamSheetState extends State<_TeamSheet> {
           _SheetField(controller: _notes, label: 'Notes', hint: 'Optional notes', maxLines: 3),
           if (_error != null) ...[
             const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+            Text(_error!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13)),
           ],
         ],
       ),
@@ -858,21 +920,21 @@ class _LinkPickerSheet<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
           const SizedBox(height: 12),
           if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('No items found', style: TextStyle(color: AppColors.textMuted))),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('No items found', style: TextStyle(color: context.colors.textMuted))),
             )
           else
             ConstrainedBox(
@@ -880,14 +942,14 @@ class _LinkPickerSheet<T> extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: items.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.divider),
+                separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.divider),
                 itemBuilder: (_, i) {
                   final item = items[i];
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(labelFor(item), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     subtitle: sublabelFor(item).isNotEmpty
-                        ? Text(sublabelFor(item), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))
+                        ? Text(sublabelFor(item), style: TextStyle(fontSize: 12, color: context.colors.textSecondary))
                         : null,
                     onTap: () {
                       onSelect(item);
@@ -917,9 +979,9 @@ class _SheetScaffold extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: Column(
@@ -928,7 +990,7 @@ class _SheetScaffold extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                 const Spacer(),
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                 const SizedBox(width: 4),
@@ -964,14 +1026,14 @@ class _SheetField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 5),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
           decoration: InputDecoration(hintText: hint),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

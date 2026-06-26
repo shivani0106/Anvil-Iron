@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../models/order.dart';
 import '../../models/invoice.dart';
 import '../../models/machine.dart';
@@ -12,40 +12,40 @@ class StatusChip extends StatelessWidget {
   const StatusChip({super.key, required this.label, required this.color, this.small = false});
 
   static Color colorForOrderStage(OrderStage stage, bool delivered) {
-    if (delivered) return AppColors.statusDelivered;
+    if (delivered) return AppColorScheme.statusDelivered;
     switch (stage) {
       case OrderStage.queued:
-        return AppColors.statusQueued;
+        return AppColorScheme.statusQueued;
       case OrderStage.cutting:
-        return AppColors.statusCutting;
+        return AppColorScheme.statusCutting;
       case OrderStage.welding:
-        return AppColors.statusWelding;
+        return AppColorScheme.statusWelding;
       case OrderStage.qc:
-        return AppColors.statusQC;
+        return AppColorScheme.statusQC;
       case OrderStage.ready:
-        return AppColors.statusReady;
+        return AppColorScheme.statusReady;
     }
   }
 
   static Color colorForInvoice(InvoiceStatus status) {
     switch (status) {
       case InvoiceStatus.paid:
-        return AppColors.invoicePaid;
+        return AppColorScheme.invoicePaid;
       case InvoiceStatus.outstanding:
-        return AppColors.invoiceOutstanding;
+        return AppColorScheme.invoiceOutstanding;
       case InvoiceStatus.overdue:
-        return AppColors.invoiceOverdue;
+        return AppColorScheme.invoiceOverdue;
     }
   }
 
   static Color colorForMachine(MachineStatus status) {
     switch (status) {
       case MachineStatus.running:
-        return AppColors.machineRunning;
+        return AppColorScheme.machineRunning;
       case MachineStatus.idle:
-        return AppColors.machineIdle;
+        return AppColorScheme.machineIdle;
       case MachineStatus.maintenance:
-        return AppColors.machineMaintenance;
+        return AppColorScheme.machineMaintenance;
     }
   }
 

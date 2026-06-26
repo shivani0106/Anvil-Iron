@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 
 class InfoCard extends StatelessWidget {
@@ -11,19 +11,20 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: padding ?? const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: context.colors.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A28231A),
+              color: isDark ? const Color(0x40000000) : const Color(0x0A28231A),
               blurRadius: 2,
-              offset: Offset(0, 1),
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -49,19 +50,20 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: context.colors.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A28231A),
+              color: isDark ? const Color(0x40000000) : const Color(0x0A28231A),
               blurRadius: 2,
-              offset: Offset(0, 1),
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -70,10 +72,10 @@ class StatCard extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 letterSpacing: 0.02,
               ),
             ),
@@ -83,7 +85,7 @@ class StatCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: valueColor ?? AppColors.textPrimary,
+                color: valueColor ?? context.colors.textPrimary,
                 letterSpacing: -0.02,
               ),
             ),

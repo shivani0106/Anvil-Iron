@@ -10,12 +10,30 @@ class NavigationCubit extends Cubit<NavigationState> {
 
   Timer? _toastTimer;
 
-  void navigateTo(AppScreen screen, {int? orderId, int? materialId}) {
+  void navigateTo(
+    AppScreen screen, {
+    int? orderId,
+    int? materialId,
+    int? customerId,
+    String? drawingId,
+  }) {
     emit(NavigationState(
-      stack: [...state.stack, ScreenEntry(screen: screen, orderId: orderId, materialId: materialId)],
+      stack: [
+        ...state.stack,
+        ScreenEntry(
+          screen: screen,
+          orderId: orderId,
+          materialId: materialId,
+          customerId: customerId,
+          drawingId: drawingId,
+        ),
+      ],
       toast: state.toast,
     ));
   }
+
+  void navigateToDrawing(String drawingId) =>
+      navigateTo(AppScreen.drawingViewer, drawingId: drawingId);
 
   void back() {
     if (state.canGoBack) {

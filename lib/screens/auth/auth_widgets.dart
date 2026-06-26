@@ -2,7 +2,7 @@
 // Kept public (no underscore) so both files can import them.
 
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 
 // ── Anvil icon mark (amber gradient + custom anvil shape) ─────────────────────
@@ -97,7 +97,7 @@ class AuthAppLogo extends StatelessWidget {
       children: [
         const AnvilIconMark(size: 46, shadow: false),
         const SizedBox(width: 14),
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -105,7 +105,7 @@ class AuthAppLogo extends StatelessWidget {
               style: TextStyle(
                 fontSize: 21,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 letterSpacing: -0.4,
               ),
             ),
@@ -113,7 +113,7 @@ class AuthAppLogo extends StatelessWidget {
               'FACTORY MANAGER',
               style: TextStyle(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.18,
               ),
@@ -139,10 +139,10 @@ class AuthHeadline extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
             letterSpacing: -0.6,
             height: 1.15,
           ),
@@ -150,9 +150,9 @@ class AuthHeadline extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -192,10 +192,10 @@ class AuthField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
         const SizedBox(height: 6),
@@ -206,7 +206,7 @@ class AuthField extends StatelessWidget {
           enabled: enabled,
           validator: validator,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
           decoration: InputDecoration(hintText: hint, suffixIcon: suffix),
         ),
       ],
@@ -259,21 +259,21 @@ class AuthOrDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Expanded(child: Divider(color: AppColors.border)),
+        Expanded(child: Divider(color: context.colors.border)),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Text(
             'or',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: context.colors.textMuted,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        Expanded(child: Divider(color: AppColors.border)),
+        Expanded(child: Divider(color: context.colors.border)),
       ],
     );
   }
@@ -295,8 +295,8 @@ class AuthGoogleButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: AppColors.surface,
-          side: const BorderSide(color: AppColors.border, width: 1.5),
+          backgroundColor: context.colors.surface,
+          side: BorderSide(color: context.colors.border, width: 1.5),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
         ),
@@ -305,12 +305,12 @@ class AuthGoogleButton extends StatelessWidget {
           children: [
             AuthGoogleColorIcon(),
             const SizedBox(width: 10),
-            const Text(
+            Text(
               'Continue with Google',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],
@@ -362,7 +362,7 @@ class AuthBottomLink extends StatelessWidget {
       children: [
         Text(
           '$question ',
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
         ),
         GestureDetector(
           onTap: onTap,
@@ -370,7 +370,7 @@ class AuthBottomLink extends StatelessWidget {
             actionLabel,
             style: const TextStyle(
               fontSize: 13,
-              color: AppColors.accent,
+              color: AppColorScheme.accent,
               fontWeight: FontWeight.w700,
             ),
           ),

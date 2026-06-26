@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 
 class CallButton extends StatelessWidget {
   final String number;
@@ -31,10 +31,10 @@ class CallButton extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: AppColors.statusReady.withValues(alpha: 0.12),
+          color: AppColorScheme.statusReady.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.phone_outlined, size: size * 0.5, color: AppColors.statusReady),
+        child: Icon(Icons.phone_outlined, size: size * 0.5, color: AppColorScheme.statusReady),
       ),
     );
   }

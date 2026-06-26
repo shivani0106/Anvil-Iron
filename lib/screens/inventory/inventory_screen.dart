@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/navigation/navigation_state.dart';
 import '../../cubits/inventory/inventory_cubit.dart';
@@ -22,7 +22,7 @@ class InventoryScreen extends StatelessWidget {
         final lowCount = state.lowStockItems.length;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: const ScreenAppBar(title: 'Inventory'),
           body: Column(
             children: [
@@ -40,18 +40,18 @@ class InventoryScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.error.withValues(alpha: 0.25)),
+                      border: Border.all(color: AppColorScheme.error.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.error),
+                        const Icon(Icons.warning_amber_rounded, size: 16, color: AppColorScheme.error),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             '$lowCount item${lowCount > 1 ? 's' : ''} below reorder level — check Inventory before they block a job.',
-                            style: const TextStyle(fontSize: 12, color: AppColors.error),
+                            style: const TextStyle(fontSize: 12, color: AppColorScheme.error),
                           ),
                         ),
                       ],
@@ -78,15 +78,15 @@ class InventoryScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       m.name,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
+                                        color: context.colors.textPrimary,
                                       ),
                                     ),
                                     Text(
                                       m.category,
-                                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                                     ),
                                   ],
                                 ),
@@ -99,12 +99,12 @@ class InventoryScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: m.isLow ? AppColors.error : AppColors.textPrimary,
+                                      color: m.isLow ? AppColorScheme.error : context.colors.textPrimary,
                                     ),
                                   ),
                                   Text(
                                     'min ${m.reorder.toInt()} ${m.unit}',
-                                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                    style: TextStyle(fontSize: 11, color: context.colors.textMuted),
                                   ),
                                 ],
                               ),
@@ -113,7 +113,7 @@ class InventoryScreen extends StatelessWidget {
                           const SizedBox(height: 9),
                           AppProgressBar(
                             value: m.stockPercent,
-                            color: m.isLow ? AppColors.error : AppColors.textSecondary,
+                            color: m.isLow ? AppColorScheme.error : context.colors.textSecondary,
                             height: 5,
                           ),
                         ],

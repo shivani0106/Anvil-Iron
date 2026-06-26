@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/customers/customers_cubit.dart';
@@ -21,14 +21,14 @@ class CustomersScreen extends StatelessWidget {
         final customers = state.filtered;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Customers',
             action: GestureDetector(
               onTap: () => _showCustomerSheet(ctx, null),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: AppColorScheme.accent, borderRadius: BorderRadius.circular(999)),
                 child: const Text('+ New', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ),
@@ -44,23 +44,23 @@ class CustomersScreen extends StatelessWidget {
                 ),
               ),
               if (state.isLoading)
-                const Expanded(child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent)))
+                const Expanded(child: Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColorScheme.accent)))
               else if (customers.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.people_outline, size: 48, color: AppColors.textMuted),
+                        Icon(Icons.people_outline, size: 48, color: context.colors.textMuted),
                         const SizedBox(height: 12),
                         Text(
                           state.searchQuery.isEmpty ? 'No customers yet' : 'No results found',
-                          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(fontSize: 14, color: context.colors.textSecondary),
                         ),
                         if (state.searchQuery.isEmpty) ...[
                           const SizedBox(height: 6),
-                          const Text('Tap + New to add your first customer',
-                              style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                          Text('Tap + New to add your first customer',
+                              style: TextStyle(fontSize: 12, color: context.colors.textMuted)),
                         ],
                       ],
                     ),
@@ -108,7 +108,7 @@ class CustomersScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: const Text('Delete', style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -118,8 +118,6 @@ class CustomersScreen extends StatelessWidget {
     }
   }
 }
-
-// ── Customer Card ─────────────────────────────────────────────────────────────
 
 class _CustomerCard extends StatelessWidget {
   final Customer customer;
@@ -139,10 +137,10 @@ class _CustomerCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: AppColors.accentSoft, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: context.colors.accentSoft, shape: BoxShape.circle),
                 child: Center(
                   child: Text(customer.initials,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.accent)),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColorScheme.accent)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -151,27 +149,27 @@ class _CustomerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(customer.name,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                     if (customer.address.isNotEmpty)
                       Text(customer.address,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+                icon: Icon(Icons.more_vert, size: 18, color: context.colors.textMuted),
                 onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColors.error))),
+                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppColorScheme.error))),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const Divider(height: 1, color: AppColors.divider),
+          Divider(height: 1, color: context.colors.divider),
           const SizedBox(height: 10),
           _ContactRow(icon: Icons.phone_outlined, label: customer.mobile, phone: customer.mobile),
           if (customer.altNumber.isNotEmpty) ...[
@@ -185,7 +183,7 @@ class _CustomerCard extends StatelessWidget {
           if (customer.notes.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(customer.notes,
-                style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontStyle: FontStyle.italic)),
+                style: TextStyle(fontSize: 12, color: context.colors.textMuted, fontStyle: FontStyle.italic)),
           ],
         ],
       ),
@@ -204,16 +202,14 @@ class _ContactRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.textMuted),
+        Icon(icon, size: 14, color: context.colors.textMuted),
         const SizedBox(width: 6),
-        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary))),
+        Expanded(child: Text(label, style: TextStyle(fontSize: 13, color: context.colors.textSecondary))),
         if (phone != null && phone!.isNotEmpty) CallButton(number: phone!, size: 32),
       ],
     );
   }
 }
-
-// ── Customer Form Sheet ───────────────────────────────────────────────────────
 
 class _CustomerSheet extends StatefulWidget {
   final Customer? existing;
@@ -317,9 +313,9 @@ class _CustomerSheetState extends State<_CustomerSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: SingleChildScrollView(
@@ -330,7 +326,7 @@ class _CustomerSheetState extends State<_CustomerSheet> {
               Row(
                 children: [
                   Text(widget.existing == null ? 'New Customer' : 'Edit Customer',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
                   const Spacer(),
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                   const SizedBox(width: 4),
@@ -359,14 +355,14 @@ class _CustomerSheetState extends State<_CustomerSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.errorSoft,
+                    color: context.colors.errorSoft,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColorScheme.error),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -390,7 +386,7 @@ class _CustomerSheetState extends State<_CustomerSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textSecondary)),
         const SizedBox(height: 5),
         TextField(
           controller: c,
@@ -404,7 +400,7 @@ class _CustomerSheetState extends State<_CustomerSheet> {
                 }
               : null,
           decoration: InputDecoration(hintText: hint, errorText: error),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

@@ -22,6 +22,17 @@ class OrdersRepository {
     }).eq('id', id);
   }
 
+  Future<void> updateCurrentStep(int orderId, int step) async {
+    await _client.from('orders').update({'current_step': step}).eq('id', orderId);
+  }
+
+  Future<void> markAsDelivered(int orderId) async {
+    await _client.from('orders').update({
+      'delivered': true,
+      'stage': OrderStage.ready.name,
+    }).eq('id', orderId);
+  }
+
   Future<void> updateWorkType(int id, WorkType workType) async {
     await _client.from('orders').update({'work_type': workType.value}).eq('id', id);
   }

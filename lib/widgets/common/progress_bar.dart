@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 
 class AppProgressBar extends StatelessWidget {
   final double value;
@@ -20,8 +20,8 @@ class AppProgressBar extends StatelessWidget {
       child: LinearProgressIndicator(
         value: value.clamp(0.0, 1.0),
         minHeight: height,
-        backgroundColor: const Color(0xFFEFEBE3),
-        valueColor: AlwaysStoppedAnimation<Color>(color ?? AppColors.accent),
+        backgroundColor: context.colors.border,
+        valueColor: AlwaysStoppedAnimation<Color>(color ?? AppColorScheme.accent),
       ),
     );
   }
@@ -47,9 +47,9 @@ class AvatarCircle extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: bg ?? AppColors.accentSoft,
+        color: bg ?? context.colors.accentSoft,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: context.colors.borderLight),
       ),
       child: Center(
         child: Text(
@@ -57,7 +57,7 @@ class AvatarCircle extends StatelessWidget {
           style: TextStyle(
             fontSize: size * 0.36,
             fontWeight: FontWeight.w700,
-            color: fg ?? AppColors.accent,
+            color: fg ?? AppColorScheme.accent,
           ),
         ),
       ),

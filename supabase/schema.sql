@@ -97,11 +97,18 @@ CREATE TABLE IF NOT EXISTS machines (
 );
 
 CREATE TABLE IF NOT EXISTS drawings (
-  name      TEXT PRIMARY KEY,
-  user_id   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  customer  TEXT NOT NULL,
-  size      TEXT,
-  rev       TEXT
+  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  file_name       TEXT NOT NULL,
+  customer        TEXT NOT NULL DEFAULT '',
+  storage_path    TEXT NOT NULL,
+  signed_url      TEXT,
+  url_expires_at  TIMESTAMPTZ,
+  file_type       TEXT NOT NULL,
+  file_size       BIGINT,
+  rev             TEXT DEFAULT 'rev 1',
+  uploaded_by     UUID REFERENCES auth.users(id),
+  created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS team_members (
@@ -198,6 +205,7 @@ CREATE INDEX IF NOT EXISTS idx_teams_team_name         ON teams(team_name);
 CREATE INDEX IF NOT EXISTS idx_teams_user_id           ON teams(user_id);
 CREATE INDEX IF NOT EXISTS idx_machines_status         ON machines(status);
 CREATE INDEX IF NOT EXISTS idx_machines_user_id        ON machines(user_id);
+CREATE INDEX IF NOT EXISTS idx_drawings_user_id        ON drawings(user_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_items_user_id ON inventory_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id        ON invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_quotes_user_id          ON quotes(user_id);
@@ -216,6 +224,16 @@ ALTER TABLE materials         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE machines          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drawings          ENABLE ROW LEVEL SECURITY;
+
+-- drawings
+CREATE POLICY "user_select_drawings" ON drawings FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "user_insert_drawings" ON drawings FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+CREATE POLICY "user_update_drawings" ON drawings FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY "user_delete_drawings" ON drawings FOR DELETE TO authenticated USING (user_id = auth.uid());
+
+-- Storage bucket: project-files
+-- Policy: authenticated users can upload to their own user_id folder
+-- Policy: authenticated users can read/delete files they uploaded
 
 -- orders (user owns their rows)
 CREATE POLICY "user_select_orders" ON orders FOR SELECT TO authenticated USING (user_id = auth.uid());
@@ -353,7 +371,11 @@ CREATE POLICY "user_update_workflow_steps" ON workflow_steps FOR UPDATE TO authe
 CREATE POLICY "user_delete_workflow_steps" ON workflow_steps FOR DELETE TO authenticated
   USING (EXISTS (SELECT 1 FROM orders WHERE orders.id = workflow_steps.order_id AND orders.user_id = auth.uid()));
 
--- ── 10. Enable Realtime ────────────────────────────────────────
+-- ── 10. Workflow step progress tracking ──────────────────────────
+-- Run this migration in Supabase SQL Editor if not already applied:
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT -1;
+
+-- ── 11. Enable Realtime ────────────────────────────────────────
 -- Run in Supabase Dashboard → Database → Replication → enable for these tables:
 -- machines, materials, teams
 -- Or run: ALTER TABLE machines  REPLICA IDENTITY FULL;

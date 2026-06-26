@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/navigation/navigation_state.dart';
@@ -25,7 +25,7 @@ class OrdersScreen extends StatelessWidget {
         final orders = state.filteredOrders;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Orders',
             action: GestureDetector(
@@ -36,7 +36,7 @@ class OrdersScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: AppColorScheme.accent,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Text(
@@ -71,10 +71,10 @@ class OrdersScreen extends StatelessWidget {
               const SizedBox(height: 6),
               Expanded(
                 child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColorScheme.accent))
                     : orders.isEmpty
-                        ? const Center(
-                            child: Text('No orders found', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                        ? Center(
+                            child: Text('No orders found', style: TextStyle(color: context.colors.textSecondary, fontSize: 14)),
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
@@ -95,7 +95,7 @@ class OrdersScreen extends StatelessWidget {
                                           Expanded(
                                             child: Text(
                                               o.titleText,
-                                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
                                             ),
                                           ),
                                           StatusChip(label: o.stageLabel, color: stageColor),
@@ -104,7 +104,7 @@ class OrdersScreen extends StatelessWidget {
                                       const SizedBox(height: 3),
                                       Text(
                                         '${o.customer} · ${o.qty} pcs · due ${o.due}',
-                                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                        style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                                       ),
                                       const SizedBox(height: 5),
                                       Row(
@@ -148,16 +148,16 @@ class _WorkTypeFilterRow extends StatelessWidget {
               margin: EdgeInsets.only(right: i < WorkTypeFilter.values.length - 1 ? 8 : 0),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: selected ? AppColors.accent.withValues(alpha: 0.12) : AppColors.surface,
+                color: selected ? AppColorScheme.accent.withValues(alpha: 0.12) : context.colors.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                border: Border.all(color: selected ? AppColors.accent : AppColors.border),
+                border: Border.all(color: selected ? AppColorScheme.accent : context.colors.border),
               ),
               child: Text(
                 labels[i],
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: selected ? AppColors.accent : AppColors.textSecondary,
+                  color: selected ? AppColorScheme.accent : context.colors.textSecondary,
                 ),
               ),
             ),
@@ -178,7 +178,7 @@ class _WorkTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isInHouse ? AppColors.accentSoft : AppColors.tagBg,
+        color: isInHouse ? context.colors.accentSoft : context.colors.tagBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
       ),
       child: Row(
@@ -187,7 +187,7 @@ class _WorkTypeBadge extends StatelessWidget {
           Icon(
             isInHouse ? Icons.factory_outlined : Icons.local_shipping_outlined,
             size: 11,
-            color: isInHouse ? AppColors.accent : AppColors.tagText,
+            color: isInHouse ? AppColorScheme.accent : context.colors.tagText,
           ),
           const SizedBox(width: 4),
           Text(
@@ -195,7 +195,7 @@ class _WorkTypeBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: isInHouse ? AppColors.accent : AppColors.tagText,
+              color: isInHouse ? AppColorScheme.accent : context.colors.tagText,
             ),
           ),
         ],

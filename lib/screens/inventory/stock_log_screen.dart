@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/navigation/navigation_cubit.dart';
 import '../../cubits/inventory/inventory_cubit.dart';
@@ -26,7 +26,7 @@ class StockLogScreen extends StatelessWidget {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(title: material.name),
           body: Column(
             children: [
@@ -36,25 +36,25 @@ class StockLogScreen extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Current Stock',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                            style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                           ),
                           Text(
                             material.qtyText,
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: material.isLow ? AppColors.error : AppColors.textPrimary,
+                              color: material.isLow ? AppColorScheme.error : context.colors.textPrimary,
                             ),
                           ),
                         ],
@@ -62,7 +62,7 @@ class StockLogScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       AppProgressBar(
                         value: material.stockPercent,
-                        color: material.isLow ? AppColors.error : AppColors.accent,
+                        color: material.isLow ? AppColorScheme.error : AppColorScheme.accent,
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -72,12 +72,12 @@ class StockLogScreen extends StatelessWidget {
                             material.isLow ? '⚠ Below reorder level' : 'Stock level OK',
                             style: TextStyle(
                               fontSize: 12,
-                              color: material.isLow ? AppColors.error : AppColors.textSecondary,
+                              color: material.isLow ? AppColorScheme.error : context.colors.textSecondary,
                             ),
                           ),
                           Text(
                             'Reorder at ${material.reorder.toInt()} ${material.unit}',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                            style: TextStyle(fontSize: 12, color: context.colors.textMuted),
                           ),
                         ],
                       ),
@@ -97,28 +97,28 @@ class StockLogScreen extends StatelessWidget {
                         decoration: InputDecoration(
                           hintText: 'Qty (${material.unit})',
                           filled: true,
-                          fillColor: AppColors.surface,
+                          fillColor: context.colors.surface,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: context.colors.border),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: BorderSide(color: context.colors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                            borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+                            borderSide: const BorderSide(color: AppColorScheme.accent, width: 1.5),
                           ),
                         ),
-                        style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                        style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
                       ),
                     ),
                     const SizedBox(width: 8),
                     _StockButton(
                       label: '+ Add',
-                      color: AppColors.statusReady,
+                      color: AppColorScheme.statusReady,
                       onTap: () {
                         ctx.read<InventoryCubit>().applyStock(materialId, 1);
                         ctx.read<NavigationCubit>().showToast('Stock added');
@@ -127,7 +127,7 @@ class StockLogScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     _StockButton(
                       label: '− Use',
-                      color: AppColors.error,
+                      color: AppColorScheme.error,
                       onTap: () {
                         ctx.read<InventoryCubit>().applyStock(materialId, -1);
                         ctx.read<NavigationCubit>().showToast('Stock updated');
@@ -137,20 +137,20 @@ class StockLogScreen extends StatelessWidget {
                 ),
               ),
               // Log
-              const Padding(
-                padding: EdgeInsets.fromLTRB(18, 0, 18, 10),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Log',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                 ),
               ),
               Expanded(
                 child: material.log.isEmpty
-                    ? const Center(
-                        child: Text('No log entries yet', style: TextStyle(color: AppColors.textMuted)),
+                    ? Center(
+                        child: Text('No log entries yet', style: TextStyle(color: context.colors.textMuted)),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
@@ -162,9 +162,9 @@ class StockLogScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: context.colors.surface,
                               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                              border: Border.all(color: AppColors.border),
+                              border: Border.all(color: context.colors.border),
                             ),
                             child: Row(
                               children: [
@@ -173,15 +173,15 @@ class StockLogScreen extends StatelessWidget {
                                   height: 32,
                                   decoration: BoxDecoration(
                                     color: isAdd
-                                        ? AppColors.statusReady.withValues(alpha: 0.1)
-                                        : AppColors.error.withValues(alpha: 0.1),
+                                        ? AppColorScheme.statusReady.withValues(alpha: 0.1)
+                                        : AppColorScheme.error.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
                                     child: Icon(
                                       isAdd ? Icons.add : Icons.remove,
                                       size: 16,
-                                      color: isAdd ? AppColors.statusReady : AppColors.error,
+                                      color: isAdd ? AppColorScheme.statusReady : AppColorScheme.error,
                                     ),
                                   ),
                                 ),
@@ -192,11 +192,11 @@ class StockLogScreen extends StatelessWidget {
                                     children: [
                                       Text(
                                         entry.note,
-                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.colors.textPrimary),
                                       ),
                                       Text(
                                         entry.date,
-                                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                        style: TextStyle(fontSize: 11, color: context.colors.textMuted),
                                       ),
                                     ],
                                   ),
@@ -206,7 +206,7 @@ class StockLogScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: isAdd ? AppColors.statusReady : AppColors.error,
+                                    color: isAdd ? AppColorScheme.statusReady : AppColorScheme.error,
                                   ),
                                 ),
                               ],

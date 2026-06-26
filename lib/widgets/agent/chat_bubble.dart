@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../cubits/agent/agent_state.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -22,14 +22,14 @@ class ChatBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.accent : AppColors.surface,
+          color: isUser ? AppColorScheme.accent : context.colors.surface,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(isUser ? 16 : 4),
             bottomRight: Radius.circular(isUser ? 4 : 16),
           ),
-          border: isUser ? null : Border.all(color: AppColors.border),
+          border: isUser ? null : Border.all(color: context.colors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(13),
@@ -43,7 +43,7 @@ class ChatBubble extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             height: 1.45,
-            color: isUser ? Colors.white : AppColors.textPrimary,
+            color: isUser ? Colors.white : context.colors.textPrimary,
           ),
         ),
       ),

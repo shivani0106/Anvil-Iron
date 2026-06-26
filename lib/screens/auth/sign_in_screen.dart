@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/auth/auth_cubit.dart';
@@ -64,7 +64,7 @@ class _SignInScreenState extends State<SignInScreen> {
       builder: (ctx, state) {
         final isLoading = state is AppAuthLoading;
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 26),
@@ -105,7 +105,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               size: 20,
-                              color: AppColors.textMuted,
+                              color: context.colors.textMuted,
                             ),
                             onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword),
@@ -150,7 +150,7 @@ class _SignInScreenState extends State<SignInScreen> {
         SnackBar(
           content: Text(message),
           backgroundColor:
-              isError ? AppColors.error : const Color(0xFF2E7D32),
+              isError ? AppColorScheme.error : const Color(0xFF2E7D32),
           duration: Duration(seconds: isError ? 4 : 7),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

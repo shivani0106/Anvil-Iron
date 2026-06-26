@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/teams_mgmt/teams_mgmt_cubit.dart';
@@ -21,7 +21,7 @@ class TeamScreen extends StatelessWidget {
         final teammates = state.filtered;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Team',
             action: GestureDetector(
@@ -29,7 +29,7 @@ class TeamScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: AppColorScheme.accent,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: const Text(
@@ -60,18 +60,18 @@ class TeamScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
                     child: Text(state.error!,
-                        style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                        style: const TextStyle(color: AppColorScheme.error, fontSize: 13)),
                   ),
                 ),
               if (state.isLoading)
                 const Expanded(
                   child: Center(
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.accent),
+                        strokeWidth: 2, color: AppColorScheme.accent),
                   ),
                 )
               else if (teammates.isEmpty)
@@ -80,22 +80,22 @@ class TeamScreen extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.person_add_outlined,
-                            size: 48, color: AppColors.textMuted),
+                        Icon(Icons.person_add_outlined,
+                            size: 48, color: context.colors.textMuted),
                         const SizedBox(height: 12),
                         Text(
                           state.searchQuery.isEmpty
                               ? 'No teammates yet'
                               : 'No results found',
-                          style: const TextStyle(
-                              fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 14, color: context.colors.textSecondary),
                         ),
                         if (state.searchQuery.isEmpty) ...[
                           const SizedBox(height: 6),
-                          const Text(
+                          Text(
                             'Tap + Add to add your first teammate',
                             style: TextStyle(
-                                fontSize: 12, color: AppColors.textMuted),
+                                fontSize: 12, color: context.colors.textMuted),
                           ),
                         ],
                       ],
@@ -148,7 +148,7 @@ class TeamScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Remove',
-                style: TextStyle(color: AppColors.error)),
+                style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -158,8 +158,6 @@ class TeamScreen extends StatelessWidget {
     }
   }
 }
-
-// ── Teammate Card ─────────────────────────────────────────────────────────────
 
 class _TeammateCard extends StatelessWidget {
   final Teammate teammate;
@@ -183,8 +181,8 @@ class _TeammateCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentSoft,
+                decoration: BoxDecoration(
+                  color: context.colors.accentSoft,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -193,7 +191,7 @@ class _TeammateCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.accent,
+                      color: AppColorScheme.accent,
                     ),
                   ),
                 ),
@@ -202,23 +200,23 @@ class _TeammateCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   teammate.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert,
-                    size: 18, color: AppColors.textMuted),
+                icon: Icon(Icons.more_vert,
+                    size: 18, color: context.colors.textMuted),
                 onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
                   PopupMenuItem(
                     value: 'delete',
                     child: Text('Remove',
-                        style: TextStyle(color: AppColors.error)),
+                        style: TextStyle(color: AppColorScheme.error)),
                   ),
                 ],
               ),
@@ -226,18 +224,18 @@ class _TeammateCard extends StatelessWidget {
           ),
           if (teammate.contact.isNotEmpty) ...[
             const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.phone_outlined,
-                    size: 14, color: AppColors.textMuted),
+                Icon(Icons.phone_outlined,
+                    size: 14, color: context.colors.textMuted),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     teammate.contact,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textSecondary),
+                    style: TextStyle(
+                        fontSize: 13, color: context.colors.textSecondary),
                   ),
                 ),
                 CallButton(number: teammate.contact, size: 32),
@@ -257,12 +255,12 @@ class _TeammateCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.tagBg,
+                          color: context.colors.tagBg,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(s,
-                            style: const TextStyle(
-                                fontSize: 11, color: AppColors.tagText)),
+                            style: TextStyle(
+                                fontSize: 11, color: context.colors.tagText)),
                       ))
                   .toList(),
             ),
@@ -271,9 +269,9 @@ class _TeammateCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               teammate.notes,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -283,8 +281,6 @@ class _TeammateCard extends StatelessWidget {
     );
   }
 }
-
-// ── Add / Edit Sheet ──────────────────────────────────────────────────────────
 
 class _TeammateSheet extends StatefulWidget {
   final Teammate? existing;
@@ -374,9 +370,9 @@ class _TeammateSheetState extends State<_TeammateSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: Column(
@@ -387,10 +383,10 @@ class _TeammateSheetState extends State<_TeammateSheet> {
               children: [
                 Text(
                   widget.existing == null ? 'Add Teammate' : 'Edit Teammate',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -425,14 +421,14 @@ class _TeammateSheetState extends State<_TeammateSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.errorSoft,
+                  color: context.colors.errorSoft,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                    const Icon(Icons.wifi_off_outlined, size: 14, color: AppColorScheme.error),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                    Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13))),
                   ],
                 ),
               ),
@@ -456,10 +452,10 @@ class _TeammateSheetState extends State<_TeammateSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             )),
         const SizedBox(height: 5),
         TextField(
@@ -474,7 +470,7 @@ class _TeammateSheetState extends State<_TeammateSheet> {
                 }
               : null,
           decoration: InputDecoration(hintText: hint, errorText: error),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

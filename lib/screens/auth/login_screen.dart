@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/auth/auth_cubit.dart';
 import '../../cubits/auth/auth_state.dart';
@@ -17,7 +17,7 @@ class LoginScreen extends StatelessWidget {
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: AppColors.error,
+              backgroundColor: AppColorScheme.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -37,7 +37,7 @@ class LoginScreen extends StatelessWidget {
       builder: (ctx, state) {
         final isLoading = state is AppAuthLoading;
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -66,8 +66,6 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-// ── Sub-widgets ──────────────────────────────────────────────────────────────
-
 class _Logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -77,14 +75,14 @@ class _Logo extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: AppColorScheme.accent,
             borderRadius: BorderRadius.circular(14),
           ),
           child: const Icon(Icons.precision_manufacturing_rounded,
               color: Colors.white, size: 26),
         ),
         const SizedBox(width: 14),
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -92,13 +90,13 @@ class _Logo extends StatelessWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
             Text(
               'Factory Manager',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
             ),
           ],
         ),
@@ -110,7 +108,7 @@ class _Logo extends StatelessWidget {
 class _Headline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -118,17 +116,17 @@ class _Headline extends StatelessWidget {
           style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
             letterSpacing: -0.8,
             height: 1.1,
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           'Sign in with your Google account\nto access the shop floor dashboard.',
           style: TextStyle(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
             height: 1.55,
           ),
         ),
@@ -150,12 +148,12 @@ class _GoogleSignInButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: AppColors.surface,
-          side: const BorderSide(color: AppColors.border, width: 1.5),
+          backgroundColor: context.colors.surface,
+          side: BorderSide(color: context.colors.border, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
-          disabledBackgroundColor: AppColors.surface,
+          disabledBackgroundColor: context.colors.surface,
         ),
         child: isLoading
             ? const SizedBox(
@@ -163,7 +161,7 @@ class _GoogleSignInButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColorScheme.accent),
                 ),
               )
             : Row(
@@ -171,12 +169,12 @@ class _GoogleSignInButton extends StatelessWidget {
                 children: [
                   _GoogleLogo(),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Continue with Google',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                 ],
@@ -189,7 +187,6 @@ class _GoogleSignInButton extends StatelessWidget {
 class _GoogleLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Google "G" logo drawn with colored text — no image asset needed.
     return const SizedBox(
       width: 20,
       height: 20,
@@ -207,12 +204,11 @@ class _GoogleLogoPainter extends CustomPainter {
     final cy = size.height / 2;
     final r = size.width / 2;
 
-    // Draw each colored arc segment of the Google logo
     final segments = [
-      (0.0, 1.57, const Color(0xFF4285F4)),   // Blue  — right
-      (1.57, 3.14, const Color(0xFF34A853)),  // Green — bottom
-      (3.14, 4.19, const Color(0xFFFBBC05)),  // Yellow — bottom-left
-      (4.19, 6.28, const Color(0xFFEA4335)),  // Red   — top
+      (0.0, 1.57, const Color(0xFF4285F4)),
+      (1.57, 3.14, const Color(0xFF34A853)),
+      (3.14, 4.19, const Color(0xFFFBBC05)),
+      (4.19, 6.28, const Color(0xFFEA4335)),
     ];
 
     for (final (start, end, color) in segments) {
@@ -229,7 +225,6 @@ class _GoogleLogoPainter extends CustomPainter {
       );
     }
 
-    // White cutout for the "G" crossbar gap on the right
     final cutPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
@@ -238,7 +233,6 @@ class _GoogleLogoPainter extends CustomPainter {
       cutPaint,
     );
 
-    // Blue fill for right half + crossbar
     final fillPaint = Paint()
       ..color = const Color(0xFF4285F4)
       ..style = PaintingStyle.fill;
@@ -259,13 +253,13 @@ class _GoogleLogoPainter extends CustomPainter {
 class _PrivacyNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Text(
         'By continuing you agree to our terms of service\nand privacy policy.',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 11,
-          color: AppColors.textMuted,
+          color: context.colors.textMuted,
           height: 1.5,
         ),
       ),

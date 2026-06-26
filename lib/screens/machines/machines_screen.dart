@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validators.dart';
 import '../../cubits/machines/machines_cubit.dart';
@@ -27,16 +27,15 @@ class MachinesScreen extends StatelessWidget {
             machines.where((m) => m.status == MachineStatus.maintenance).length;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           appBar: ScreenAppBar(
             title: 'Machines',
             action: GestureDetector(
               onTap: () => _showMachineSheet(ctx, null),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                    color: AppColors.accent,
+                    color: AppColorScheme.accent,
                     borderRadius: BorderRadius.circular(999)),
                 child: const Text('+ New',
                     style: TextStyle(
@@ -52,20 +51,11 @@ class MachinesScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
                 child: Row(
                   children: [
-                    _MiniStat(
-                        label: 'Running',
-                        value: '$running',
-                        color: AppColors.machineRunning),
+                    _MiniStat(label: 'Running', value: '$running', color: AppColorScheme.machineRunning),
                     const SizedBox(width: 10),
-                    _MiniStat(
-                        label: 'Idle',
-                        value: '$idle',
-                        color: AppColors.machineIdle),
+                    _MiniStat(label: 'Idle', value: '$idle', color: AppColorScheme.machineIdle),
                     const SizedBox(width: 10),
-                    _MiniStat(
-                        label: 'Maintenance',
-                        value: '$maintenance',
-                        color: AppColors.machineMaintenance),
+                    _MiniStat(label: 'Maintenance', value: '$maintenance', color: AppColorScheme.machineMaintenance),
                   ],
                 ),
               ),
@@ -84,40 +74,38 @@ class MachinesScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                        color: AppColors.errorSoft,
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSm)),
+                        color: context.colors.errorSoft,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                     child: Text(state.error!,
-                        style: const TextStyle(
-                            color: AppColors.error, fontSize: 13)),
+                        style: const TextStyle(color: AppColorScheme.error, fontSize: 13)),
                   ),
                 ),
               if (state.isLoading)
                 const Expanded(
                     child: Center(
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: AppColors.accent)))
+                            strokeWidth: 2, color: AppColorScheme.accent)))
               else if (machines.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.precision_manufacturing_outlined,
-                            size: 48, color: AppColors.textMuted),
+                        Icon(Icons.precision_manufacturing_outlined,
+                            size: 48, color: context.colors.textMuted),
                         const SizedBox(height: 12),
                         Text(
                           state.searchQuery.isEmpty
                               ? 'No machines yet'
                               : 'No results found',
-                          style: const TextStyle(
-                              fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 14, color: context.colors.textSecondary),
                         ),
                         if (state.searchQuery.isEmpty) ...[
                           const SizedBox(height: 6),
-                          const Text('Tap + New to add your first machine',
+                          Text('Tap + New to add your first machine',
                               style: TextStyle(
-                                  fontSize: 12, color: AppColors.textMuted)),
+                                  fontSize: 12, color: context.colors.textMuted)),
                         ],
                       ],
                     ),
@@ -169,7 +157,7 @@ class MachinesScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Delete',
-                style: TextStyle(color: AppColors.error)),
+                style: TextStyle(color: AppColorScheme.error)),
           ),
         ],
       ),
@@ -185,11 +173,11 @@ class MachinesScreen extends StatelessWidget {
 Color _statusColor(MachineStatus s) {
   switch (s) {
     case MachineStatus.running:
-      return AppColors.machineRunning;
+      return AppColorScheme.machineRunning;
     case MachineStatus.idle:
-      return AppColors.machineIdle;
+      return AppColorScheme.machineIdle;
     case MachineStatus.maintenance:
-      return AppColors.machineMaintenance;
+      return AppColorScheme.machineMaintenance;
   }
 }
 
@@ -215,13 +203,13 @@ class _MachineCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration:
-                    BoxDecoration(color: AppColors.accentSoft, shape: BoxShape.circle),
+                    BoxDecoration(color: context.colors.accentSoft, shape: BoxShape.circle),
                 child: Center(
                   child: Text(machine.initials,
                       style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.accent)),
+                          color: AppColorScheme.accent)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -230,14 +218,14 @@ class _MachineCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(machine.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary)),
+                            color: context.colors.textPrimary)),
                     if (machine.machineNumber.isNotEmpty)
                       Text('ID: ${machine.machineNumber}',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                          style: TextStyle(
+                              fontSize: 12, color: context.colors.textSecondary)),
                   ],
                 ),
               ),
@@ -257,15 +245,15 @@ class _MachineCard extends StatelessWidget {
                 ],
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert,
-                    size: 18, color: AppColors.textMuted),
+                icon: Icon(Icons.more_vert,
+                    size: 18, color: context.colors.textMuted),
                 onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
                   PopupMenuItem(
                       value: 'delete',
                       child: Text('Delete',
-                          style: TextStyle(color: AppColors.error))),
+                          style: TextStyle(color: AppColorScheme.error))),
                 ],
               ),
             ],
@@ -276,13 +264,13 @@ class _MachineCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text('${(machine.utilization * 100).toInt()}% utilization',
                 style:
-                    const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                    TextStyle(fontSize: 11, color: context.colors.textMuted)),
           ],
           if (machine.type.isNotEmpty ||
               machine.manufacturer.isNotEmpty ||
               machine.capacity.isNotEmpty) ...[
             const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -304,9 +292,9 @@ class _MachineCard extends StatelessWidget {
           if (machine.note.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(machine.note,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                     fontStyle: FontStyle.italic)),
           ],
         ],
@@ -326,15 +314,15 @@ class _DetailChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-          color: AppColors.tagBg, borderRadius: BorderRadius.circular(999)),
+          color: context.colors.tagBg, borderRadius: BorderRadius.circular(999)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.textMuted),
+          Icon(icon, size: 12, color: context.colors.textMuted),
           const SizedBox(width: 4),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary)),
+              style: TextStyle(
+                  fontSize: 12, color: context.colors.textSecondary)),
         ],
       ),
     );
@@ -355,9 +343,9 @@ class _MiniStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,8 +354,8 @@ class _MiniStat extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 20, fontWeight: FontWeight.w700, color: color)),
             Text(label,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary)),
+                style: TextStyle(
+                    fontSize: 12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -497,10 +485,10 @@ class _MachineSheetState extends State<_MachineSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: context.colors.surface,
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+              const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
         child: SingleChildScrollView(
@@ -512,10 +500,10 @@ class _MachineSheetState extends State<_MachineSheet> {
                 children: [
                   Text(
                       widget.existing == null ? 'New Machine' : 'Edit Machine',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
+                          color: context.colors.textPrimary)),
                   const Spacer(),
                   TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -554,11 +542,11 @@ class _MachineSheetState extends State<_MachineSheet> {
                 Expanded(child: _field(_purchaseDate, 'Purchase Date', 'e.g. 2023-01-15')),
               ]),
               const SizedBox(height: 12),
-              const Text('Status',
+              Text('Status',
                   style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary)),
+                      color: context.colors.textSecondary)),
               const SizedBox(height: 6),
               SegmentedButton<MachineStatus>(
                 segments: const [
@@ -580,13 +568,13 @@ class _MachineSheetState extends State<_MachineSheet> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                   child: Row(
                     children: [
-                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColors.error),
+                      const Icon(Icons.wifi_off_outlined, size: 14, color: AppColorScheme.error),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                      Expanded(child: Text(_saveError!, style: const TextStyle(color: AppColorScheme.error, fontSize: 13))),
                     ],
                   ),
                 ),
@@ -611,10 +599,10 @@ class _MachineSheetState extends State<_MachineSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary)),
+                color: context.colors.textSecondary)),
         const SizedBox(height: 5),
         TextField(
           controller: c,
@@ -628,7 +616,7 @@ class _MachineSheetState extends State<_MachineSheet> {
                 }
               : null,
           decoration: InputDecoration(hintText: hint, errorText: error),
-          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
         ),
       ],
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 
 class AgentInputBar extends StatefulWidget {
@@ -37,8 +37,8 @@ class _AgentInputBarState extends State<AgentInputBar> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.border)),
       ),
       child: Row(
         children: [
@@ -50,25 +50,25 @@ class _AgentInputBarState extends State<AgentInputBar> {
               textInputAction: TextInputAction.send,
               maxLines: 3,
               minLines: 1,
-              style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 14, color: context.colors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Ask anything about your business…',
-                hintStyle: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                hintStyle: TextStyle(fontSize: 14, color: context.colors.textSecondary),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: context.colors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: context.colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+                  borderSide: const BorderSide(color: AppColorScheme.accent, width: 1.5),
                 ),
                 filled: true,
-                fillColor: AppColors.background,
+                fillColor: context.colors.background,
               ),
             ),
           ),
@@ -79,7 +79,7 @@ class _AgentInputBarState extends State<AgentInputBar> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: widget.isLoading ? AppColors.textSecondary : AppColors.accent,
+                color: widget.isLoading ? context.colors.textSecondary : AppColorScheme.accent,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               ),
               child: widget.isLoading

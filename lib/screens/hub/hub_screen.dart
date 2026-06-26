@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_color_scheme.dart';
 import '../../core/theme/app_theme.dart';
 import '../../cubits/auth/auth_cubit.dart';
 import '../../cubits/auth/auth_state.dart';
@@ -12,6 +12,7 @@ import '../../cubits/inventory/inventory_cubit.dart';
 import '../../cubits/inventory/inventory_state.dart';
 import '../../cubits/invoices/invoices_cubit.dart';
 import '../../cubits/invoices/invoices_state.dart';
+import '../../cubits/theme/theme_cubit.dart';
 import '../../models/order.dart';
 import '../../widgets/common/status_chip.dart';
 import '../../widgets/common/info_card.dart';
@@ -46,7 +47,7 @@ class HubScreen extends StatelessWidget {
                 final hubJobs = activeOrders.take(3).toList();
 
                 return Scaffold(
-                  backgroundColor: AppColors.background,
+                  backgroundColor: context.colors.background,
                   body: SafeArea(
                     child: CustomScrollView(
                       slivers: [
@@ -57,23 +58,19 @@ class HubScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // New Order CTA
                                 _buildNewOrderCta(ctx, nav),
                                 const SizedBox(height: 18),
-                                // Stats grid
                                 _buildStatsGrid(ctx, nav, activeOrders.length, lowStock.length, outstanding, overdue, revenue),
                                 const SizedBox(height: 18),
-                                // Quick access grid
                                 _buildQuickAccess(ctx, nav),
                                 const SizedBox(height: 18),
-                                // Recent jobs
                                 if (hubJobs.isNotEmpty) ...[
-                                  const Text(
+                                  Text(
                                     'Active Jobs',
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 10),
@@ -123,50 +120,33 @@ class HubScreen extends StatelessWidget {
                 if (factoryName.isNotEmpty)
                   Text(
                     factoryName.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
+                      color: ctx.colors.textSecondary,
                       letterSpacing: 0.06,
                     ),
                   ),
                 const SizedBox(height: 4),
                 Text(
                   'Hello, $firstName',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: ctx.colors.textPrimary,
                     letterSpacing: -0.02,
                   ),
                 ),
               ],
             ),
           ),
-          // AI assistant button
-          // GestureDetector(
-          //   onTap: () => nav.navigateTo(AppScreen.agent),
-          //   child: Container(
-          //     width: 44,
-          //     height: 44,
-          //     decoration: BoxDecoration(
-          //       color: AppColors.surface,
-          //       borderRadius: BorderRadius.circular(14),
-          //       border: Border.all(color: AppColors.border),
-          //     ),
-          //     child: const Icon(Icons.auto_awesome_rounded,
-          //         size: 22, color: AppColors.accent),
-          //   ),
-          // ),
-          // const SizedBox(width: 10),
-          // Avatar — tap to open profile / logout menu
           GestureDetector(
             onTap: () => _showProfileMenu(ctx, authState),
             child: AvatarCircle(
               initials: initials,
               size: 44,
-              bg: AppColors.surface,
-              fg: AppColors.tagText,
+              bg: ctx.colors.surface,
+              fg: ctx.colors.tagText,
             ),
           ),
         ],
@@ -189,7 +169,7 @@ class HubScreen extends StatelessWidget {
         displayName: displayName,
         email: email,
         onLogout: () {
-          Navigator.of(ctx).pop(); // close sheet first
+          Navigator.of(ctx).pop();
           ctx.read<AuthCubit>().signOut();
         },
       ),
@@ -205,7 +185,7 @@ class HubScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          color: AppColors.accent,
+          color: AppColorScheme.accent,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           boxShadow: const [
             BoxShadow(
@@ -252,19 +232,19 @@ class HubScreen extends StatelessWidget {
         StatCard(
           label: 'Low stock items',
           value: '$lowCount',
-          valueColor: lowCount > 0 ? AppColors.error : AppColors.textPrimary,
+          valueColor: lowCount > 0 ? AppColorScheme.error : null,
           onTap: () => nav.navigateTo(AppScreen.inventory),
         ),
         StatCard(
           label: 'Outstanding',
           value: _inr(outstanding),
-          valueColor: AppColors.invoiceOutstanding,
+          valueColor: AppColorScheme.invoiceOutstanding,
           onTap: () => nav.navigateTo(AppScreen.invoices),
         ),
         StatCard(
           label: 'Overdue',
           value: _inr(overdue),
-          valueColor: overdue > 0 ? AppColors.invoiceOverdue : AppColors.textPrimary,
+          valueColor: overdue > 0 ? AppColorScheme.invoiceOverdue : null,
           onTap: () => nav.navigateTo(AppScreen.invoices),
         ),
       ],
@@ -291,30 +271,30 @@ class HubScreen extends StatelessWidget {
       childAspectRatio: 0.9,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: items.map((item) => _buildQuickItem(item)).toList(),
+      children: items.map((item) => _buildQuickItem(ctx, item)).toList(),
     );
   }
 
-  Widget _buildQuickItem(_QuickItem item) {
+  Widget _buildQuickItem(BuildContext ctx, _QuickItem item) {
     return GestureDetector(
       onTap: item.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: ctx.colors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: ctx.colors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(item.icon, size: 22, color: AppColors.accent),
+            Icon(item.icon, size: 22, color: AppColorScheme.accent),
             const SizedBox(height: 6),
             Text(
               item.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
+                color: ctx.colors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -336,18 +316,18 @@ class HubScreen extends StatelessWidget {
               children: [
                 Text(
                   order.titleText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: ctx.colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${order.customer} · due ${order.due}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: ctx.colors.textSecondary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -387,9 +367,9 @@ class _ProfileSheet extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 28),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -400,7 +380,7 @@ class _ProfileSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.border,
+              color: context.colors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -413,11 +393,11 @@ class _ProfileSheet extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
+                    color: context.colors.accentSoft,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.person_outline_rounded,
-                      color: AppColors.accent, size: 24),
+                      color: AppColorScheme.accent, size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -426,19 +406,19 @@ class _ProfileSheet extends StatelessWidget {
                     children: [
                       Text(
                         displayName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (email.isNotEmpty)
                         Text(
                           email,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -448,7 +428,53 @@ class _ProfileSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 24, color: AppColors.divider),
+          Divider(height: 24, color: context.colors.divider),
+          // Theme toggle
+          BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (ctx, themeMode) {
+              final isDark = themeMode == ThemeMode.dark;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: context.colors.tagBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        color: context.colors.textSecondary,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        isDark ? 'Dark Mode' : 'Light Mode',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: isDark,
+                      onChanged: (_) => ctx.read<ThemeCubit>().toggle(),
+                      activeThumbColor: AppColorScheme.accent,
+                      activeTrackColor: AppColorScheme.accent.withValues(alpha: 0.25),
+                      inactiveThumbColor: context.colors.textSecondary,
+                      inactiveTrackColor: context.colors.border,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          Divider(height: 16, color: context.colors.divider),
           // Logout row
           InkWell(
             onTap: onLogout,
@@ -461,11 +487,11 @@ class _ProfileSheet extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.errorSoft,
+                      color: context.colors.errorSoft,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.logout_rounded,
-                        color: AppColors.error, size: 18),
+                        color: AppColorScheme.error, size: 18),
                   ),
                   const SizedBox(width: 14),
                   const Text(
@@ -473,7 +499,7 @@ class _ProfileSheet extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.error,
+                      color: AppColorScheme.error,
                     ),
                   ),
                 ],
