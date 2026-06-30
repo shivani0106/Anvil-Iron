@@ -129,7 +129,7 @@ class _AppProviders extends StatelessWidget {
         BlocProvider(create: (_) => CustomersCubit()),
         BlocProvider(create: (_) => SuppliersCubit()),
         BlocProvider(create: (_) => MachinesCubit()),
-        BlocProvider(create: (_) => MaterialsCubit()),
+        BlocProvider(create: (ctx) => MaterialsCubit(inventoryCubit: ctx.read<InventoryCubit>())),
         BlocProvider(create: (_) => TeamsMgmtCubit()),
         BlocProvider(create: (_) => DrawingsCubit()),
         BlocProvider(

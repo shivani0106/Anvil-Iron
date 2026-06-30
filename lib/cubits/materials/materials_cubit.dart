@@ -1,15 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/app_material.dart';
+import '../../models/inventory_item.dart';
 import '../../repositories/app_materials_repository.dart';
+import '../inventory/inventory_cubit.dart';
 import 'materials_state.dart';
 
 class MaterialsCubit extends Cubit<MaterialsState> {
   final AppMaterialsRepository _repo;
+  final InventoryCubit? _inventoryCubit;
   RealtimeChannel? _channel;
 
-  MaterialsCubit({AppMaterialsRepository? repo})
+  MaterialsCubit({AppMaterialsRepository? repo, InventoryCubit? inventoryCubit})
       : _repo = repo ?? AppMaterialsRepository(),
+        _inventoryCubit = inventoryCubit,
         super(const MaterialsState(isLoading: true)) {
     loadData();
   }
@@ -38,6 +42,14 @@ class MaterialsCubit extends Cubit<MaterialsState> {
     try {
       final created = await _repo.create(material);
       emit(state.copyWith(materials: [...state.materials, created]));
+      await _inventoryCubit?.addItem(InventoryItem(
+        id: 0,
+        name: created.name,
+        category: created.type.isEmpty ? 'General' : created.type,
+        qty: created.quantity,
+        unit: created.unit.isEmpty ? 'pcs' : created.unit,
+        reorder: 0,
+      ));
       return true;
     } catch (e) {
       emit(state.copyWith(error: 'Failed to save material'));

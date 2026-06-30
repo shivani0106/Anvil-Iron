@@ -24,4 +24,28 @@ class InventoryRepository {
       'note': entry.note,
     });
   }
+
+  Future<InventoryItem> addItem(InventoryItem item) async {
+    final data = await _client.from('inventory_items').insert({
+      'user_id': _client.auth.currentUser!.id,
+      'name': item.name,
+      'category': item.category,
+      'qty': item.qty,
+      'unit': item.unit,
+      'reorder_qty': item.reorder,
+    }).select().single();
+    return InventoryItem.fromJson({...data, 'stock_log_entries': []});
+  }
+
+  RealtimeChannel subscribeToChanges(void Function() onChanged) {
+    return _client
+        .channel('public:inventory_items')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'inventory_items',
+          callback: (_) => onChanged(),
+        )
+        .subscribe();
+  }
 }

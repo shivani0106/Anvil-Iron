@@ -1,22 +1,34 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/inventory_item.dart';
 import '../../repositories/inventory_repository.dart';
 import 'inventory_state.dart';
 
 class InventoryCubit extends Cubit<InventoryState> {
   final InventoryRepository _repo;
+  RealtimeChannel? _channel;
 
   InventoryCubit({InventoryRepository? repo})
       : _repo = repo ?? InventoryRepository(),
         super(const InventoryState(items: [], isLoading: true)) {
-    loadData();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await loadData();
+    _subscribeRealtime();
   }
 
   Future<void> loadData() async {
     emit(state.copyWith(isLoading: true));
     final items = await _repo.fetchAll();
     emit(state.copyWith(items: items, isLoading: false));
+  }
+
+  void _subscribeRealtime() {
+    _channel?.unsubscribe();
+    _channel = _repo.subscribeToChanges(() => loadData());
   }
 
   void setSearch(String query) {
@@ -48,11 +60,24 @@ class InventoryCubit extends Cubit<InventoryState> {
     emit(state.copyWith(items: updated, stockInput: ''));
   }
 
+  Future<void> addItem(InventoryItem item) async {
+    try {
+      final created = await _repo.addItem(item);
+      emit(state.copyWith(items: [...state.items, created]));
+    } catch (_) {}
+  }
+
   InventoryItem? getItemById(int id) {
     try {
       return state.items.firstWhere((m) => m.id == id);
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  Future<void> close() {
+    _channel?.unsubscribe();
+    return super.close();
   }
 }

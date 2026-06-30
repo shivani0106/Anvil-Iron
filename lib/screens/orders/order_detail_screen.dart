@@ -112,7 +112,7 @@ class _OrderDetailView extends StatelessWidget {
                             } else {
                               await ordersCubit.advanceWorkflowStep(order.id, steps.length);
                               final updated = ordersCubit.getOrderById(order.id);
-                              if (updated != null && updated.currentStep < steps.length) {
+                              if (updated != null && updated.currentStep >= 0 && updated.currentStep < steps.length) {
                                 navCubit.showToast('Started: ${steps[updated.currentStep].name}');
                               }
                             }
@@ -125,7 +125,8 @@ class _OrderDetailView extends StatelessWidget {
                               navCubit.showToast('Moved to ${updated.stageLabel}');
                             }
                           }
-                        } catch (_) {
+                        } catch (e) {
+                          debugPrint('Production stage update error: $e');
                           navCubit.showToast('Update failed. Please try again.');
                         }
                       },

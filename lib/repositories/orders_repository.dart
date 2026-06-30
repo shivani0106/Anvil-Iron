@@ -10,7 +10,9 @@ class OrdersRepository {
   }
 
   Future<Order> create(Order order) async {
-    final json = order.toJson()..['user_id'] = _client.auth.currentUser!.id;
+    final json = order.toJson()
+      ..remove('id') // let the DB auto-generate the primary key
+      ..['user_id'] = _client.auth.currentUser!.id;
     final data = await _client.from('orders').insert(json).select().single();
     return Order.fromJson(data);
   }

@@ -18,6 +18,7 @@ class OrdersState extends Equatable {
   final List<String> formWorkflowSteps;
   final String formError;
   final bool isLoading;
+  final bool isSubmitting;
 
   const OrdersState({
     required this.orders,
@@ -42,6 +43,7 @@ class OrdersState extends Equatable {
     ],
     this.formError = '',
     this.isLoading = false,
+    this.isSubmitting = false,
   });
 
   List<Order> get filteredOrders {
@@ -87,6 +89,7 @@ class OrdersState extends Equatable {
     List<String>? formWorkflowSteps,
     String? formError,
     bool? isLoading,
+    bool? isSubmitting,
   }) {
     return OrdersState(
       orders: orders ?? this.orders,
@@ -102,6 +105,7 @@ class OrdersState extends Equatable {
       formWorkflowSteps: formWorkflowSteps ?? this.formWorkflowSteps,
       formError: formError ?? this.formError,
       isLoading: isLoading ?? this.isLoading,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
     );
   }
 
@@ -109,6 +113,6 @@ class OrdersState extends Equatable {
   List<Object?> get props => [
         orders, filter, workTypeFilter, searchQuery,
         formCustomer, formItem, formQty, formMaterial, formDue,
-        formWorkType, formWorkflowSteps, formError, isLoading,
+        formWorkType, formWorkflowSteps, formError, isLoading, isSubmitting,
       ];
 }

@@ -122,12 +122,12 @@ class OrdersCubit extends Cubit<OrdersState> {
       return null;
     }
 
-    final maxId = state.orders.isEmpty ? 1000 : state.orders.map((o) => o.id).reduce((a, b) => a > b ? a : b);
-    final nextId = maxId + 1;
+    emit(state.copyWith(isSubmitting: true, formError: ''));
+
     final today = DateFormat('MMM d').format(DateTime.now());
 
     final newOrder = Order(
-      id: nextId,
+      id: 0, // placeholder — DB generates the real ID
       customer: state.formCustomer.trim(),
       item: state.formItem.trim(),
       spec: '',
@@ -139,29 +139,38 @@ class OrdersCubit extends Cubit<OrdersState> {
       workType: state.formWorkType,
     );
 
-    final created = await _repo.create(newOrder);
+    try {
+      final created = await _repo.create(newOrder);
 
-    final steps = state.formWorkflowSteps;
-    if (steps.isNotEmpty) {
-      await Future.wait([
-        for (var i = 0; i < steps.length; i++)
-          _workflowRepo.create(steps[i], created.id, i),
-      ]);
+      final steps = state.formWorkflowSteps;
+      if (steps.isNotEmpty) {
+        await Future.wait([
+          for (var i = 0; i < steps.length; i++)
+            _workflowRepo.create(steps[i], created.id, i),
+        ]);
+      }
+
+      emit(state.copyWith(
+        orders: [created, ...state.orders],
+        formCustomer: '',
+        formItem: '',
+        formQty: '',
+        formMaterial: '',
+        formDue: '',
+        formWorkType: WorkType.inHouse,
+        formWorkflowSteps: List.of(_defaultWorkflowSteps),
+        formError: '',
+        isSubmitting: false,
+      ));
+
+      return created.id;
+    } catch (e) {
+      emit(state.copyWith(
+        formError: 'Failed to create order. Please try again.',
+        isSubmitting: false,
+      ));
+      return null;
     }
-
-    emit(state.copyWith(
-      orders: [created, ...state.orders],
-      formCustomer: '',
-      formItem: '',
-      formQty: '',
-      formMaterial: '',
-      formDue: '',
-      formWorkType: WorkType.inHouse,
-      formWorkflowSteps: List.of(_defaultWorkflowSteps),
-      formError: '',
-    ));
-
-    return created.id;
   }
 
   Future<void> advanceWorkflowStep(int orderId, int totalSteps) async {

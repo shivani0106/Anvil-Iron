@@ -8,6 +8,7 @@ import '../../cubits/navigation/navigation_state.dart';
 import '../../cubits/orders/orders_cubit.dart';
 import '../../cubits/orders/orders_state.dart';
 import '../../cubits/inventory/inventory_cubit.dart';
+import '../../cubits/inventory/inventory_state.dart';
 import '../../models/order.dart';
 import '../../widgets/common/screen_app_bar.dart';
 
@@ -16,116 +17,132 @@ class NewOrderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<OrdersCubit, OrdersState>(
-      builder: (ctx, state) {
-        final nav = ctx.read<NavigationCubit>();
-        final ordersCubit = ctx.read<OrdersCubit>();
-        final materials = ctx.read<InventoryCubit>().state.items.map((m) => m.name).toList();
+    return BlocBuilder<InventoryCubit, InventoryState>(
+      builder: (ctx, inventoryState) {
+        return BlocBuilder<OrdersCubit, OrdersState>(
+          builder: (ctx, state) {
+            final nav = ctx.read<NavigationCubit>();
+            final ordersCubit = ctx.read<OrdersCubit>();
+            final materials = inventoryState.items.map((m) => m.name).toList();
 
-        return Scaffold(
-          backgroundColor: context.colors.background,
-          appBar: const ScreenAppBar(title: 'New Job Order'),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildField(
-                  context: context,
-                  label: 'Customer',
-                  hint: 'e.g. Patel Engineering',
-                  value: state.formCustomer,
-                  onChanged: (v) => ordersCubit.updateForm(customer: v),
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  context: context,
-                  label: 'Item',
-                  hint: 'e.g. MS Angle Bracket',
-                  value: state.formItem,
-                  onChanged: (v) => ordersCubit.updateForm(item: v),
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  context: context,
-                  label: 'Quantity',
-                  hint: 'e.g. 100',
-                  value: state.formQty,
-                  onChanged: (v) => ordersCubit.updateForm(qty: v),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 14),
-                _buildDropdownField(
-                  context: context,
-                  label: 'Material',
-                  hint: 'Select material',
-                  value: state.formMaterial.isEmpty ? null : state.formMaterial,
-                  options: materials,
-                  onChanged: (v) => ordersCubit.updateForm(material: v ?? ''),
-                ),
-                const SizedBox(height: 14),
-                _buildDatePickerField(
-                  context: ctx,
-                  value: state.formDue,
-                  ordersCubit: ordersCubit,
-                ),
-                const SizedBox(height: 14),
-                _buildWorkTypeField(
-                  context: context,
-                  value: state.formWorkType,
-                  onChanged: (v) => ordersCubit.updateForm(workType: v),
-                ),
-                const SizedBox(height: 14),
-                _FormWorkflowSection(
-                  steps: state.formWorkflowSteps,
-                  onAdd: (name) => ordersCubit.addFormWorkflowStep(name),
-                  onRemove: (i) => ordersCubit.removeFormWorkflowStep(i),
-                  onMoveUp: (i) => ordersCubit.moveFormWorkflowStepUp(i),
-                  onMoveDown: (i) => ordersCubit.moveFormWorkflowStepDown(i),
-                ),
-                if (state.formError.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.colors.errorSoft,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppColorScheme.error.withValues(alpha: 0.3)),
+            return Scaffold(
+              backgroundColor: ctx.colors.background,
+              appBar: const ScreenAppBar(title: 'New Job Order'),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildField(
+                      context: ctx,
+                      label: 'Customer',
+                      hint: 'e.g. Patel Engineering',
+                      value: state.formCustomer,
+                      onChanged: (v) => ordersCubit.updateForm(customer: v),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error_outline, size: 16, color: AppColorScheme.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            state.formError,
-                            style: const TextStyle(color: AppColorScheme.error, fontSize: 13),
-                          ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                      context: ctx,
+                      label: 'Item',
+                      hint: 'e.g. MS Angle Bracket',
+                      value: state.formItem,
+                      onChanged: (v) => ordersCubit.updateForm(item: v),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                      context: ctx,
+                      label: 'Quantity',
+                      hint: 'e.g. 100',
+                      value: state.formQty,
+                      onChanged: (v) => ordersCubit.updateForm(qty: v),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildDropdownField(
+                      context: ctx,
+                      label: 'Material',
+                      hint: inventoryState.isLoading
+                          ? 'Loading materials...'
+                          : materials.isEmpty
+                              ? 'No materials in inventory'
+                              : 'Select material',
+                      value: state.formMaterial.isEmpty ? null : state.formMaterial,
+                      options: materials,
+                      onChanged: (v) => ordersCubit.updateForm(material: v ?? ''),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildDatePickerField(
+                      context: ctx,
+                      value: state.formDue,
+                      ordersCubit: ordersCubit,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildWorkTypeField(
+                      context: ctx,
+                      value: state.formWorkType,
+                      onChanged: (v) => ordersCubit.updateForm(workType: v),
+                    ),
+                    const SizedBox(height: 14),
+                    _FormWorkflowSection(
+                      steps: state.formWorkflowSteps,
+                      onAdd: (name) => ordersCubit.addFormWorkflowStep(name),
+                      onRemove: (i) => ordersCubit.removeFormWorkflowStep(i),
+                      onMoveUp: (i) => ordersCubit.moveFormWorkflowStepUp(i),
+                      onMoveDown: (i) => ordersCubit.moveFormWorkflowStepDown(i),
+                    ),
+                    if (state.formError.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: ctx.colors.errorSoft,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          border: Border.all(color: AppColorScheme.error.withValues(alpha: 0.3)),
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, size: 16, color: AppColorScheme.error),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                state.formError,
+                                style: const TextStyle(color: AppColorScheme.error, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: state.isSubmitting
+                            ? null
+                            : () async {
+                                final newId = await ordersCubit.submitOrder();
+                                if (newId != null && ctx.mounted) {
+                                  nav.replaceStack([
+                                    const ScreenEntry(screen: AppScreen.hub),
+                                    const ScreenEntry(screen: AppScreen.orders),
+                                  ]);
+                                  nav.showToast('Job #$newId created');
+                                }
+                              },
+                        child: state.isSubmitting
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('Create Order'),
+                      ),
                     ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final newId = await ordersCubit.submitOrder();
-                      if (newId != null) {
-                        nav.replaceStack([
-                          const ScreenEntry(screen: AppScreen.hub),
-                          const ScreenEntry(screen: AppScreen.orders),
-                        ]);
-                        nav.showToast('Job #$newId created');
-                      }
-                    },
-                    child: const Text('Create Order'),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
